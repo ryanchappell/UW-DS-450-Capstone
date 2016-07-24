@@ -57,3 +57,5 @@ data/*.csv
 # log files
 *.log
 
+# R scratch files
+scratch.R
