@@ -1,6 +1,6 @@
 # UW DS 450 Capstone Project
 
-Some notes on the directory structure
+Notes on the directory structure
 
 /data
  - see README.MD inside this directory
