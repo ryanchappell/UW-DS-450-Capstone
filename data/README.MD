@@ -1,6 +1,6 @@
 # Data Directory 
 
-After cloning the repo locally, the data files below should be placed in the the same directory as this README.MD file.
+After cloning this repo locally, the data files below should be placed in the the same directory as this README.MD file.
 
 app_events.csv
 
