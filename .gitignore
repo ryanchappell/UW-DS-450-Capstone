@@ -51,3 +51,9 @@ Temporary Items
 
 data/*.csv
 
+# R user files
+.Rhistory
+
+# log files
+*.log
+

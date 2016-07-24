@@ -1,13 +1,14 @@
 ##--------------------------------------------
-##
+## Ryan Chappell
 ## UW 450 Capstone project
 ##
-## This file contains utility functions to flatten the data.
+## This file contains utility functions to flatten the phone usage data.
 ##
 ##--------------------------------------------
 
+##
 ## TODO: review which of these should be in INNER JOIN
-
+##
 
 # function to LEFT JOIN on label_id
 mergeAppLabelCategories = function(appLabels, labelCategories)
