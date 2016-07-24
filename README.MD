@@ -3,7 +3,7 @@
 Some notes on the directory structure
 
 /data
- - where the .csv files are expected to live on the target machine (they are not committed to source control)
+ - see README.MD inside this directory
  
 /scratch.R
  - reading and merging the .csv data
