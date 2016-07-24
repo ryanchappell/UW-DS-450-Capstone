@@ -1,6 +1,6 @@
 # Data Directory 
 
-When cloned locally, these files are expected to be present in the ./data directory:
+After cloning the repo locally, these files should be downloaded and placed in the current directory.
 
 app_events.csv
 
