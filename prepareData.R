@@ -10,7 +10,7 @@
 install.packages('logging')
 library(logging)
 
-source('flatten.R')
+source('prepareDataUtils.R')
 
 ########## CHANGE THIS for your local machine
 setwd('C:/projects/UW-DS-450-Capstone')
@@ -21,6 +21,9 @@ if (interactive()) {
   addHandler(writeToFile, file = 'UW-DS-450-Capstone.log')
   loginfo('Starting up!')
   
+  loginfo('Running unit tests')
+  consolidateCategories_Test
+  
   # process settings
   maxRecordsToRead = 5000
   loginfo(paste0('Max records to read from each data file is ', 
@@ -28,6 +31,9 @@ if (interactive()) {
   
   loginfo('Reading label_categories.csv')
   labelCategories = read.csv('data/label_categories.csv', nrows = maxRecordsToRead)
+  
+  loginfo('Consolidating categories')
+  conCategories = consolidateCategories(labelCategories$category)
   
   # TODO: look at cleaning appLabels up, e.g. categories like:
   #  - multiple category instances, like 'unknown' and 'unknown' categories
@@ -47,6 +53,8 @@ if (interactive()) {
   
   # TODO: review if we should binarize these categories (rather than
   # having a row in the flattened data for each category)
+  # TODO: look at creating heirarchy of categories (e.g. "Mens's Shoes"
+  # could be associated with a "Shoes" category). Probably
   loginfo('Flatten relationship (app events and app categories)')
   appEventCategories = mergeAppEventCategories(appEvents, appCategories)
   
@@ -65,7 +73,8 @@ if (interactive()) {
   
   loginfo('Reading phone_brand_device_model.csv')
   # TODO: review character encoding, e.g. values like 'å°ç±³' for phone_brand column
-  phoneSpecs = read.csv('data/phone_brand_device_model.csv', nrows = maxRecordsToRead)
+  phoneSpecs = read.csv('data/phone_brand_device_model.csv', nrows = maxRecordsToRead, 
+                        encoding="UTF-8", stringsAsFactors = FALSE)
   
   loginfo('Flatten relationship (gender/age and phone specs)')
   flatData = mergeGenderAgePhoneSpecs(genderAgeDevice, phoneSpecs)
