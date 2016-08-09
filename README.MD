@@ -8,5 +8,5 @@ Notes on the directory structure
 /prepareData.R
  - reading and merging the .csv data
  
-/flatten.R
+/prepareDataUtil.R
  - utilities for flattening the data (used by prepareData.R)
