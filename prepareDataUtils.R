@@ -6,8 +6,14 @@
 ##
 ##--------------------------------------------
 
+# Note: this lubridate package doesn't appear to install correctly when using
+# R version 3.3.1
+install.packages('lubridate')
+library(lubridate)
+
 ##
-## TODO: review which of these should be in INNER JOIN
+## TODO: review which of these below merge functions 
+## should be in INNER JOIN
 ##
 
 # function to LEFT JOIN on label_id
@@ -45,16 +51,9 @@ mergeGenderAgePhoneSpecs = function(genderAgeDevice, phoneSpecs)
   return(result)
 }
 
-# function to consolidate categories,
-# - multiple category instances, e.g. 'unknown' and 'unknown'	
-# - cased categories, e.g. 'teahouse' and 'Teahouse'
-# - pluralized categories, e.g. 'show' and 'shows'		
-# - possibly similiar categories, e.g. 'Smart Shopping' and 'Smart Shopping 1'
-# - empty categories, e.g. ''
+# TODO: come back to this if you have time (low priority)
 consolidateCategories = function(categories)
 {
-  # TODO: finish this up
-  
   # conslidate casing
   categories = tolower(categories)
   
@@ -66,7 +65,7 @@ consolidateCategories = function(categories)
   sapply(categories, FUN = function(x){
     #print(x)
     if (!endsWith(x = as.character(x), suffix = 's')){
-      print(as.character(x))
+      #print(as.character(x))
     }
     return()
   })
@@ -81,6 +80,37 @@ consolidateCategories_Test = function()
   stopifnot(all.equal(expected, actual))
 }
 
+# get the day of week from a timestamp string (e.g.)
+getDow = function(dtStamp){
+  return(wday(dtStamp))  
+}
+
+# get time windows (e.g. "morning", "lunch", "evening", "late")
+getTimeWindow = function(dtStamp){
+  
+  result = sapply(dtStamp, FUN = function(x)
+  {
+    hour = hour(x)
+    
+    if (hour >= 4 && hour < 11)   
+    {
+      return('morning')
+    } else if (hour >= 11 && hour < 3)
+    {
+      return('lunch')
+    } else if (hour >= 3 && hour < 6){
+      return('afternoon')
+    } else if (hour >= 6 && hour < 11) {
+      return('evening')
+    } else {
+      return('late')
+    }
+  })
+  
+  return(as.factor(result))
+}
+
+# TODO: come back to this if you have time (low priority)
 translate = function(phoneBrand){
   # TODO: finish this function, 
   # also, keep both Chinese and English

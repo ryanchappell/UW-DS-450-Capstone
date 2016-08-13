@@ -21,29 +21,32 @@ if (interactive()) {
   addHandler(writeToFile, file = 'UW-DS-450-Capstone.log')
   loginfo('Starting up!')
   
-  loginfo('Running unit tests')
-  consolidateCategories_Test
+  #loginfo('Running unit tests')
+  #consolidateCategories_Test
   
   # process settings
   maxRecordsToRead = 5000
   loginfo(paste0('Max records to read from each data file is ', 
                  formatC(maxRecordsToRead, format="d", big.mark=',')))
+
+  loginfo('Reading events.csv')
+  deviceEvents = read.csv('data/events.csv', nrows = maxRecordsToRead)
+  
+  # add day of week feature
+  deviceEvents$dow = getDow(deviceEvents$timestamp)
+  # add time window feature (e.g. "morning", "afternoon")
+  deviceEvents$timeWindow = getTimeWindow(deviceEvents$timestamp)
   
   loginfo('Reading label_categories.csv')
   labelCategories = read.csv('data/label_categories.csv', nrows = maxRecordsToRead)
   
-  loginfo('Consolidating categories')
-  conCategories = consolidateCategories(labelCategories$category)
+  # TODO: the consolidateCategories function is not done, 
+  # come back if you have time (low priority)
+  #loginfo('Consolidating categories')
+  #conCategories = consolidateCategories(labelCategories$category)
   
-  # TODO: look at cleaning appLabels up, e.g. categories like:
-  #  - multiple category instances, like 'unknown' and 'unknown' categories
-  #  - cased categories, like 'teahouse' and 'Teahouse'
-  #  - pluralized categories, like 'show' and 'shows'
-  #  - possibly similiar categories, like 'Smart Shopping' and 'Smart Shopping 1'
-  #  - empty categories, like ''
   loginfo('Reading app_labels.csv')
   appLabels = read.csv('data/app_labels.csv', nrows = maxRecordsToRead)
-  
 
   loginfo('Flatten relationship  (app category)')
   appCategories = mergeAppLabelCategories(appLabels, labelCategories)
@@ -51,15 +54,8 @@ if (interactive()) {
   loginfo('Reading app_events.csv')
   appEvents = read.csv('data/app_events.csv', nrows = maxRecordsToRead)
   
-  # TODO: review if we should binarize these categories (rather than
-  # having a row in the flattened data for each category)
-  # TODO: look at creating heirarchy of categories (e.g. "Mens's Shoes"
-  # could be associated with a "Shoes" category). Probably
   loginfo('Flatten relationship (app events and app categories)')
   appEventCategories = mergeAppEventCategories(appEvents, appCategories)
-  
-  loginfo('Reading events.csv')
-  deviceEvents = read.csv('data/events.csv', nrows = maxRecordsToRead)
   
   loginfo('Flatten relationship (device events and app events)');
   eventData = mergeDeviceEventsAppEvents(deviceEvents, appEventCategories)
@@ -79,4 +75,18 @@ if (interactive()) {
   loginfo('Flatten relationship (gender/age and phone specs)')
   flatData = mergeGenderAgePhoneSpecs(genderAgeDevice, phoneSpecs)
 
+  # drop records with no useful attributes
+  keepRows = (!is.na(flatData$longitude) &
+             !is.na(flatData$longitude)) |
+             !is.na(flatData$is_active) |
+             !is.na(flatData$category) |
+             !is.na(flatData$app_id) |
+             !is.na(flatData$phone_brand) |
+             !is.na(flatData$phone_brand)
+  
+  keepColumns = !(names(flatData) %in% c("device_id"))
+  
+  flatDataFiltered = flatData[keepRows,]
+  
+  write.csv(flatDataFiltered, 'flatDataFiltered.csv')
 }
