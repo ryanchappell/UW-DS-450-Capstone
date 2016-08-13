@@ -31,9 +31,12 @@ if (interactive()) {
 
   loginfo('Reading events.csv')
   
-  # Note: this warning pops up for device_id and event_id, need to use 64 bit int/numeric
-  # or something--
+  # Note: this warning pops up for device_id and event_id:
   # 'NAs introduced by coercion to integer range'
+  # Need to use 64 bit int/numeric, but I wasn't abl to get bit64 
+  # library installed and R 2.3.3 doesn't support lubridate
+  # (via stringi dependency). So, yeah.
+
   deviceEvents = read.csv('data/events.csv', header = TRUE, nrows = maxRecordsToRead, 
                           numerals = 'warn.loss')
   
