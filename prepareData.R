@@ -46,7 +46,9 @@ if (interactive()) {
   deviceEvents$timeWindow = getTimeWindow(deviceEvents$timestamp)
   
   loginfo('Reading label_categories.csv')
-  labelCategories = read.csv('data/label_categories.csv', nrows = maxRecordsToRead)
+  # TODO: looks like there is an issue w/ precision on 
+  # app_id column (too large/small for integer/numeric)
+  labelCategories = read.csv('data/label_categories.csv')#, nrows = maxRecordsToRead)
   
   # TODO: the consolidateCategories function is not done, 
   # come back if you have time (low priority)
@@ -54,8 +56,11 @@ if (interactive()) {
   #conCategories = consolidateCategories(labelCategories$category)
   
   loginfo('Reading app_labels.csv')
-  appLabels = read.csv('data/app_labels.csv', nrows = maxRecordsToRead)
+  # TODO: looks like there is an issue w/ precision on 
+  # app_id column (too large/small for integer/numeric)
+  appLabels = read.csv('data/app_labels.csv')#, nrows = maxRecordsToRead)
 
+  
   loginfo('Flatten relationship  (app category)')
   appCategories = mergeAppLabelCategories(appLabels, labelCategories)
 

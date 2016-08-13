@@ -11,11 +11,6 @@
 install.packages('lubridate')
 library(lubridate)
 
-##
-## TODO: review which of these below merge functions 
-## should be in INNER JOIN
-##
-
 # function to LEFT JOIN on label_id
 mergeAppLabelCategories = function(appLabels, labelCategories)
 {
@@ -23,6 +18,7 @@ mergeAppLabelCategories = function(appLabels, labelCategories)
   return(result)
 }
 
+# TODO: should be inner join?
 # function to LEFT JOIN on app_id
 mergeAppEventCategories = function(appEvents, appCategories)
 {
@@ -30,6 +26,7 @@ mergeAppEventCategories = function(appEvents, appCategories)
   return(result)
 }
 
+# TODO: should be inner join?
 # function to LEFT JOIN on event_id
 mergeDeviceEventsAppEvents = function(appEvents, appEventCategories)
 {
@@ -37,6 +34,7 @@ mergeDeviceEventsAppEvents = function(appEvents, appEventCategories)
   return(result)
 }
 
+# TODO: should be inner join?
 # function to LEFT JOIN on device_id
 mergeAgeGenderDevice = function(ageGender, device)
 {
@@ -44,6 +42,7 @@ mergeAgeGenderDevice = function(ageGender, device)
   return(result)
 }
 
+# TODO: should be inner join?
 # function to LEFT JOIN on device_id
 mergeGenderAgePhoneSpecs = function(genderAgeDevice, phoneSpecs)
 {
@@ -95,12 +94,12 @@ getTimeWindow = function(dtStamp){
     if (hour >= 4 && hour < 11)   
     {
       return('morning')
-    } else if (hour >= 11 && hour < 3)
+    } else if (hour >= 11 && hour < 15)
     {
       return('lunch')
-    } else if (hour >= 3 && hour < 6){
+    } else if (hour >= 15 && hour < 18){
       return('afternoon')
-    } else if (hour >= 6 && hour < 11) {
+    } else if (hour >= 18 && hour < 23) {
       return('evening')
     } else {
       return('late')
@@ -110,6 +109,28 @@ getTimeWindow = function(dtStamp){
   return(as.factor(result))
 }
 
+getTimeWindow_Test = function()
+{
+  testItems = as.POSIXct(c('2016-01-01 23:00:00',
+                           '2016-01-01 04:00:00',
+                           '2016-01-01 11:00:00',
+                           '2016-01-01 15:00:00',
+                           '2016-01-01 18:00:00',
+                           #
+                           '2016-01-01 00:00:00',
+                           '2016-01-01 05:00:00',
+                           '2016-01-01 12:00:00',
+                           '2016-01-01 16:00:00',
+                           '2016-01-01 19:00:00'))
+  
+  expected = as.factor(c('late', 'morning', 'lunch', 'afternoon', 'evening',
+                         'late', 'morning', 'lunch', 'afternoon', 'evening'))
+  actual = getTimeWindow(testItems)
+  
+  stopifnot(all.equal(expected, actual))
+}
+
+getTimeWindow_Test()
 
 transVector = c("三星","samsung",
                 "天语","Ktouch",
