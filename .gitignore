@@ -49,7 +49,10 @@ Temporary Items
 
 # data files
 
-data/*.csv
+data/*
+!data/README.md
+output/*
+!output/README.md
 
 # R user files
 .Rhistory

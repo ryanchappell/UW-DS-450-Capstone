@@ -88,5 +88,5 @@ if (interactive()) {
   
   flatDataFiltered = flatData[keepRows,]
   
-  write.csv(flatDataFiltered, 'flatDataFiltered.csv')
+  write.csv(flatDataFiltered, 'output/generated_flatDataFiltered.csv')
 }
