@@ -30,7 +30,12 @@ if (interactive()) {
                  formatC(maxRecordsToRead, format="d", big.mark=',')))
 
   loginfo('Reading events.csv')
-  deviceEvents = read.csv('data/events.csv', nrows = maxRecordsToRead)
+  
+  # Note: this warning pops up for device_id and event_id, need to use 64 bit int/numeric
+  # or something--
+  # 'NAs introduced by coercion to integer range'
+  deviceEvents = read.csv('data/events.csv', header = TRUE, nrows = maxRecordsToRead, 
+                          numerals = 'warn.loss')
   
   # add day of week feature
   deviceEvents$dow = getDow(deviceEvents$timestamp)
