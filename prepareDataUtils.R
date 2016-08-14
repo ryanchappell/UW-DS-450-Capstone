@@ -34,11 +34,10 @@ mergeDeviceEventsAppEvents = function(appEvents, appEventCategories)
   return(result)
 }
 
-# TODO: should be inner join?
-# function to LEFT JOIN on device_id
+# function to INNER JOIN on device_id
 mergeAgeGenderDevice = function(ageGender, device)
 {
-  result = merge(ageGender, device, by = "device_id", all.x = TRUE)
+  result = merge(ageGender, device, by = "device_id")
   return(result)
 }
 

@@ -24,10 +24,12 @@ if (interactive()) {
   #loginfo('Running unit tests')
   #consolidateCategories_Test
   
-  # process settings
-  maxRecordsToRead = 5000
-  loginfo(paste0('Max records to read from each data file is ', 
-                 formatC(maxRecordsToRead, format="d", big.mark=',')))
+  # these two data files (events, app_events) are large, 
+  # providing these limits
+  maxEventsToRead = 100000
+  maxAppEventsToRead = 100000
+  
+  loginfo(paste0('maxEventsToRead is ',maxEventsToRead, ', maxAppEventsToRead is ',maxAppEventsToRead))
 
   loginfo('Reading events.csv')
   
@@ -37,12 +39,17 @@ if (interactive()) {
   # library installed and R 2.3.3 doesn't support lubridate
   # (via stringi dependency). So, yeah.
 
-  deviceEvents = read.csv('data/events.csv', header = TRUE, nrows = maxRecordsToRead, 
+  deviceEvents = read.csv('data/events.csv', header = TRUE, 
+                          nrows = maxEventsToRead, 
                           numerals = 'warn.loss',
                           # use character class as we would otherwise lose precision
                           # (using 'numeric') with the size of device_id values
-                          colClasses = c('character'))
+                          colClasses = c('character', 'character', 'POSIXct',NA,NA))
   
+  # TODO: oh, right... the day of week and time window are dependant on 
+  # the event local time. The timestamps are in Beijing time (GMT+8) and we
+  # roughtly determine a user's time zone by lat/long, but not all users have lat/long
+  # values...
   # add day of week feature
   deviceEvents$dow = getDow(deviceEvents$timestamp)
   # add time window feature (e.g. "morning", "afternoon")
@@ -75,10 +82,10 @@ if (interactive()) {
   loginfo('Reading app_events.csv')
   appEvents = read.csv('data/app_events.csv', 
                        numerals = 'warn.loss',
-                       nrows = maxRecordsToRead,
+                       nrows = maxAppEventsToRead,
                        # use character class as we would otherwise lose precision
                        # (using 'numeric') with the size of app_id values
-                       colClasses = c(NA,'character'))
+                       colClasses = c(NA,'character', 'factor', 'factor'))
   
   loginfo('Flatten relationship (app events and app categories)')
   appEventCategories = mergeAppEventCategories(appEvents, appCategories)
@@ -89,18 +96,19 @@ if (interactive()) {
   loginfo('Reading gender_age_train.csv')
   genderAge = read.csv('data/gender_age_train.csv', 
                        numerals = 'warn.loss',
-                       nrows = maxRecordsToRead,
                        # use character class as we would otherwise lose precision
                        # (using 'numeric') with the size of device_id values
-                       colClasses = c(NA,'character'))
+                       colClasses = c('character','factor', NA, 'factor'))
 
   loginfo('Flatten relationship (gender/age and phone event data)')
+  # TODO: looks like at this point, some NAs are introduced into
+  # the timestamp feature of merged data set. Fix it.
   genderAgeDevice = mergeAgeGenderDevice(genderAge, eventData)
 
   
   loginfo('Reading phone_brand_device_model.csv')
   # TODO: review character encoding, e.g. values like 'å°ç±³' for phone_brand column
-  phoneSpecs = read.csv('data/phone_brand_device_model.csv', nrows = maxRecordsToRead, 
+  phoneSpecs = read.csv('data/phone_brand_device_model.csv', 
                         encoding="UTF-8", 
                         numerals = 'warn.loss',
                         # use character class as we would otherwise lose precision
@@ -109,23 +117,40 @@ if (interactive()) {
   
   loginfo('Flatten relationship (gender/age and phone specs)')
   flatData = mergeGenderAgePhoneSpecs(genderAgeDevice, phoneSpecs)
-
-  # write flattened data
-  write.csv(flatData, 'output/generated_flatData.csv')
   
+  loginfo('Writing flattened data')
+  write.csv(flatData, 'output/flatData.csv')
+  
+  loginfo('Removing id columns from flattened data')
+  flatDataNoIds = data.frame(flatData)
+  flatDataNoIds$device_id = NULL
+  flatDataNoIds$event_id = NULL
+  flatDataNoIds$app_id = NULL
+  flatDataNoIds$label_id = NULL
+  
+  loginfo('Writing flattened data, omitting ids')
+  write.csv(flatDataNoIds, 'output/flatDataNoIds.csv')
+  
+  # This looks to be obsolete after using 'character'
+  # for id features (device_id, etc).
   # drop records with no useful attributes
-  keepRows = (!is.na(flatData$longitude) &
-             !is.na(flatData$longitude)) |
-             !is.na(flatData$is_active) |
-             !is.na(flatData$category) |
-             !is.na(flatData$app_id) |
-             !is.na(flatData$phone_brand) |
-             !is.na(flatData$phone_brand)
+  #keepRows = (!is.na(flatData$longitude) &
+  #           !is.na(flatData$longitude)) |
+  #           !is.na(flatData$is_active) |
+  #           !is.na(flatData$category) |
+  #           !is.na(flatData$app_id) |
+  #           !is.na(flatData$phone_brand) |
+  #           !is.na(flatData$phone_brand)
   
-  keepColumns = !(names(flatData) %in% c("device_id"))
+  #keepColumns = !(names(flatData) %in% c("device_id"))
   
-  flatDataFiltered = flatData[keepRows,]
+  #flatDataFiltered = flatData[keepRows,]
   
-  # write flattened data (filtered)
-  write.csv(flatDataFiltered, 'output/generated_flatDataFiltered.csv')
+  #loginfo('Writing flattened data, filtered (records with key feature values missing were removed)')
+  #write.csv(flatDataFiltered, 'output/flatDataFiltered.csv')
+  
+  #flatDataFilteredNoIds = flatDataNoIds[keepRows,]
+  
+  #loginfo('Writing flattened data, filtered, omitting ids')
+  #write.csv(flatDataFilteredNoIds, 'output/flatDataFilteredNoIds.csv')
 }
