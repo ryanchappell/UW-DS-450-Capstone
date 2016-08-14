@@ -38,7 +38,10 @@ if (interactive()) {
   # (via stringi dependency). So, yeah.
 
   deviceEvents = read.csv('data/events.csv', header = TRUE, nrows = maxRecordsToRead, 
-                          numerals = 'warn.loss')
+                          numerals = 'warn.loss',
+                          # use character class as we would otherwise lose precision
+                          # (using 'numeric') with the size of device_id values
+                          colClasses = c('character'))
   
   # add day of week feature
   deviceEvents$dow = getDow(deviceEvents$timestamp)
@@ -48,7 +51,8 @@ if (interactive()) {
   loginfo('Reading label_categories.csv')
   # TODO: looks like there is an issue w/ precision on 
   # app_id column (too large/small for integer/numeric)
-  labelCategories = read.csv('data/label_categories.csv')#, nrows = maxRecordsToRead)
+  labelCategories = read.csv('data/label_categories.csv',
+                             numerals = 'warn.loss')#, nrows = maxRecordsToRead)
   
   # TODO: the consolidateCategories function is not done, 
   # come back if you have time (low priority)
@@ -58,14 +62,23 @@ if (interactive()) {
   loginfo('Reading app_labels.csv')
   # TODO: looks like there is an issue w/ precision on 
   # app_id column (too large/small for integer/numeric)
-  appLabels = read.csv('data/app_labels.csv')#, nrows = maxRecordsToRead)
+  appLabels = read.csv('data/app_labels.csv',
+                       numerals = 'warn.loss',
+                       # use character class as we would otherwise lose precision
+                       # (using 'numeric') with the size of app_id values
+                       colClasses = c('character'))
 
   
   loginfo('Flatten relationship  (app category)')
   appCategories = mergeAppLabelCategories(appLabels, labelCategories)
 
   loginfo('Reading app_events.csv')
-  appEvents = read.csv('data/app_events.csv', nrows = maxRecordsToRead)
+  appEvents = read.csv('data/app_events.csv', 
+                       numerals = 'warn.loss',
+                       nrows = maxRecordsToRead,
+                       # use character class as we would otherwise lose precision
+                       # (using 'numeric') with the size of app_id values
+                       colClasses = c(NA,'character'))
   
   loginfo('Flatten relationship (app events and app categories)')
   appEventCategories = mergeAppEventCategories(appEvents, appCategories)
@@ -74,7 +87,12 @@ if (interactive()) {
   eventData = mergeDeviceEventsAppEvents(deviceEvents, appEventCategories)
   
   loginfo('Reading gender_age_train.csv')
-  genderAge = read.csv('data/gender_age_train.csv', nrows = maxRecordsToRead)
+  genderAge = read.csv('data/gender_age_train.csv', 
+                       numerals = 'warn.loss',
+                       nrows = maxRecordsToRead,
+                       # use character class as we would otherwise lose precision
+                       # (using 'numeric') with the size of device_id values
+                       colClasses = c(NA,'character'))
 
   loginfo('Flatten relationship (gender/age and phone event data)')
   genderAgeDevice = mergeAgeGenderDevice(genderAge, eventData)
@@ -83,11 +101,18 @@ if (interactive()) {
   loginfo('Reading phone_brand_device_model.csv')
   # TODO: review character encoding, e.g. values like 'å°ç±³' for phone_brand column
   phoneSpecs = read.csv('data/phone_brand_device_model.csv', nrows = maxRecordsToRead, 
-                        encoding="UTF-8", stringsAsFactors = FALSE)
+                        encoding="UTF-8", 
+                        numerals = 'warn.loss',
+                        # use character class as we would otherwise lose precision
+                        # (using 'numeric') with the size of device_id values
+                        colClasses = c('character'))
   
   loginfo('Flatten relationship (gender/age and phone specs)')
   flatData = mergeGenderAgePhoneSpecs(genderAgeDevice, phoneSpecs)
 
+  # write flattened data
+  write.csv(flatData, 'output/generated_flatData.csv')
+  
   # drop records with no useful attributes
   keepRows = (!is.na(flatData$longitude) &
              !is.na(flatData$longitude)) |
@@ -101,5 +126,6 @@ if (interactive()) {
   
   flatDataFiltered = flatData[keepRows,]
   
+  # write flattened data (filtered)
   write.csv(flatDataFiltered, 'output/generated_flatDataFiltered.csv')
 }
