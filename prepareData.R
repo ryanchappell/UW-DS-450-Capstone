@@ -26,19 +26,13 @@ if (interactive()) {
   
   # these two data files (events, app_events) are large, 
   # providing these limits
-  maxEventsToRead = 100000
-  maxAppEventsToRead = 100000
+  maxEventsToRead = 50000
+  maxAppEventsToRead = 50000
   
   loginfo(paste0('maxEventsToRead is ',maxEventsToRead, ', maxAppEventsToRead is ',maxAppEventsToRead))
 
   loginfo('Reading events.csv')
   
-  # Note: this warning pops up for device_id and event_id:
-  # 'NAs introduced by coercion to integer range'
-  # Need to use 64 bit int/numeric, but I wasn't abl to get bit64 
-  # library installed and R 2.3.3 doesn't support lubridate
-  # (via stringi dependency). So, yeah.
-
   deviceEvents = read.csv('data/events.csv', header = TRUE, 
                           nrows = maxEventsToRead, 
                           numerals = 'warn.loss',
@@ -56,8 +50,6 @@ if (interactive()) {
   deviceEvents$timeWindow = getTimeWindow(deviceEvents$timestamp)
   
   loginfo('Reading label_categories.csv')
-  # TODO: looks like there is an issue w/ precision on 
-  # app_id column (too large/small for integer/numeric)
   labelCategories = read.csv('data/label_categories.csv',
                              numerals = 'warn.loss')#, nrows = maxRecordsToRead)
   
@@ -67,8 +59,6 @@ if (interactive()) {
   #conCategories = consolidateCategories(labelCategories$category)
   
   loginfo('Reading app_labels.csv')
-  # TODO: looks like there is an issue w/ precision on 
-  # app_id column (too large/small for integer/numeric)
   appLabels = read.csv('data/app_labels.csv',
                        numerals = 'warn.loss',
                        # use character class as we would otherwise lose precision
@@ -101,8 +91,6 @@ if (interactive()) {
                        colClasses = c('character','factor', NA, 'factor'))
 
   loginfo('Flatten relationship (gender/age and phone event data)')
-  # TODO: looks like at this point, some NAs are introduced into
-  # the timestamp feature of merged data set. Fix it.
   genderAgeDevice = mergeAgeGenderDevice(genderAge, eventData)
 
   
@@ -130,6 +118,7 @@ if (interactive()) {
   
   loginfo('Writing flattened data, omitting ids')
   write.csv(flatDataNoIds, 'output/flatDataNoIds.csv')
+
   
   # This looks to be obsolete after using 'character'
   # for id features (device_id, etc).
