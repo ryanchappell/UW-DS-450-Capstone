@@ -11,6 +11,7 @@ install.packages('logging')
 library(logging)
 
 source('prepareDataUtils.R')
+source('exploreData.R')
 
 ########## CHANGE THIS for your local machine
 setwd('C:/projects/UW-DS-450-Capstone')
@@ -119,15 +120,8 @@ if (interactive()) {
   loginfo('Writing flattened data, omitting ids')
   write.csv(flatDataNoIds, 'output/flatDataNoIds.csv')
 
-  loginfo('Plot group vs phone_brand')
-  plot(data.frame(list(group = flatDataNoIds$group, 
-                       phone_brand = flatDataNoIds$phone_brand)
-  ))
-  
-  loginfo('Plot group vs device_model')
-  plot(data.frame(list(group = flatDataNoIds$group, 
-                       device_model = flatDataNoIds$device_model)
-  ))
+  plotAgeGroupPopularPhoneBrands(flatDataNoIds)
+  plotAgeGroupPopularDeviceModels(flatDataNoIds)
   
   # This looks to be obsolete after using 'character'
   # for id features (device_id, etc).
