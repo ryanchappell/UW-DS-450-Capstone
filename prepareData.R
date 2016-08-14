@@ -101,7 +101,7 @@ if (interactive()) {
                         numerals = 'warn.loss',
                         # use character class as we would otherwise lose precision
                         # (using 'numeric') with the size of device_id values
-                        colClasses = c('character'))
+                        colClasses = c('character','factor','factor'))
   
   loginfo('Flatten relationship (gender/age and phone specs)')
   flatData = mergeGenderAgePhoneSpecs(genderAgeDevice, phoneSpecs)
@@ -119,6 +119,15 @@ if (interactive()) {
   loginfo('Writing flattened data, omitting ids')
   write.csv(flatDataNoIds, 'output/flatDataNoIds.csv')
 
+  loginfo('Plot group vs phone_brand')
+  plot(data.frame(list(group = flatDataNoIds$group, 
+                       phone_brand = flatDataNoIds$phone_brand)
+  ))
+  
+  loginfo('Plot group vs device_model')
+  plot(data.frame(list(group = flatDataNoIds$group, 
+                       device_model = flatDataNoIds$device_model)
+  ))
   
   # This looks to be obsolete after using 'character'
   # for id features (device_id, etc).
