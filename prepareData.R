@@ -27,8 +27,8 @@ if (interactive()) {
   
   # these two data files (events, app_events) are large, 
   # providing these limits
-  maxEventsToRead = 50000
-  maxAppEventsToRead = 50000
+  maxEventsToRead = 100000
+  maxAppEventsToRead = 100000
   
   loginfo(paste0('maxEventsToRead is ',maxEventsToRead, ', maxAppEventsToRead is ',maxAppEventsToRead))
 
@@ -41,10 +41,8 @@ if (interactive()) {
                           # (using 'numeric') with the size of device_id values
                           colClasses = c('character', 'character', 'POSIXct',NA,NA))
   
-  # TODO: oh, right... the day of week and time window are dependant on 
-  # the event local time. The timestamps are in Beijing time (GMT+8) and we
-  # roughtly determine a user's time zone by lat/long, but not all users have lat/long
-  # values...
+  # add is_weekend flag
+  deviceEvents$isWeekend = getIsWeekend(deviceEvents$timestamp)
   # add day of week feature
   deviceEvents$dow = getDow(deviceEvents$timestamp)
   # add time window feature (e.g. "morning", "afternoon")

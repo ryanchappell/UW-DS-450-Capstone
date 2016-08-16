@@ -75,6 +75,42 @@ consolidateCategories_Test = function()
   stopifnot(all.equal(expected, actual))
 }
 
+# get flag indicating if dtStamp is Saturday or Sunday
+getIsWeekend = function(dtStamp)
+{
+  dow = getDow(dtStamp)
+  
+  result = sapply(dow, FUN = function(x){
+    x == 1 || x == 7
+  })
+  return(result) 
+}
+
+getIsWeekend_Test = function()
+{
+  dtStamps = as.POSIXct(c('2016-08-09',
+               '2016-08-10',
+               '2016-08-11',
+               '2016-08-12',
+               '2016-08-13',
+               '2016-08-14',
+               '2016-08-15'))
+  
+  expected = c(FALSE,
+               FALSE,
+               FALSE,
+               FALSE,
+               TRUE,
+               TRUE,
+               FALSE)
+  
+  actual = getIsWeekend(dtStamps)
+  
+  stopifnot(all.equal(expected, actual))
+}
+
+getIsWeekend_Test()
+
 # get the day of week from a timestamp string (e.g.)
 getDow = function(dtStamp){
   return(wday(dtStamp))  
