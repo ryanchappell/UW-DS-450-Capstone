@@ -22,9 +22,6 @@ if (interactive()) {
   addHandler(writeToFile, file = 'UW-DS-450-Capstone.log')
   loginfo('Starting up!')
   
-  #loginfo('Running unit tests')
-  #consolidateCategories_Test
-  
   # these two data files (events, app_events) are large, 
   # providing these limits
   maxEventsToRead = 100000
@@ -47,10 +44,12 @@ if (interactive()) {
   deviceEvents$dow = getDow(deviceEvents$timestamp)
   # add time window feature (e.g. "morning", "afternoon")
   deviceEvents$timeWindow = getTimeWindow(deviceEvents$timestamp)
+  # add hour of day
+  deviceEvents$hour = getHour(deviceEvents$timestamp)
   
   loginfo('Reading label_categories.csv')
   labelCategories = read.csv('data/label_categories.csv',
-                             numerals = 'warn.loss')#, nrows = maxRecordsToRead)
+                             numerals = 'warn.loss')
   
   # TODO: the consolidateCategories function is not done, 
   # come back if you have time (low priority)
@@ -108,39 +107,26 @@ if (interactive()) {
   loginfo('Writing flattened data')
   write.csv(flatData, 'output/flatData.csv')
   
-  loginfo('Removing id columns from flattened data')
-  flatDataNoIds = data.frame(flatData)
-  flatDataNoIds$device_id = NULL
-  flatDataNoIds$event_id = NULL
-  flatDataNoIds$app_id = NULL
-  flatDataNoIds$label_id = NULL
+  loginfo('Removing some columns from flattened data')
+  flatNarrowData = data.frame(flatData)
+  flatNarrowData$event_id = NULL
+  flatNarrowData$app_id = NULL
+  flatNarrowData$label_id = NULL
+  flatNarrowData$is_active = NULL
+  flatNarrowData$longitude = NULL
+  flatNarrowData$latitude = NULL
+  flatNarrowData$timestamp = NULL
+  flatNarrowData$is_installed = NULL
+  flatNarrowData$gender = NULL
+  flatNarrowData$age = NULL
+  flatNarrowData$category = NULL
   
-  loginfo('Writing flattened data, omitting ids')
-  write.csv(flatDataNoIds, 'output/flatDataNoIds.csv')
+  # de-duplicate
+  flatNarrowData = unique(flatNarrowData)
+  
+  loginfo('Writing flattened, narrowed data (omitting some columns)')
+  write.csv(flatNarrowData, 'output/flatNarrowData.csv')
 
-  plotAgeGroupPopularPhoneBrands(flatDataNoIds)
-  plotAgeGroupPopularDeviceModels(flatDataNoIds)
-  
-  # This looks to be obsolete after using 'character'
-  # for id features (device_id, etc).
-  # drop records with no useful attributes
-  #keepRows = (!is.na(flatData$longitude) &
-  #           !is.na(flatData$longitude)) |
-  #           !is.na(flatData$is_active) |
-  #           !is.na(flatData$category) |
-  #           !is.na(flatData$app_id) |
-  #           !is.na(flatData$phone_brand) |
-  #           !is.na(flatData$phone_brand)
-  
-  #keepColumns = !(names(flatData) %in% c("device_id"))
-  
-  #flatDataFiltered = flatData[keepRows,]
-  
-  #loginfo('Writing flattened data, filtered (records with key feature values missing were removed)')
-  #write.csv(flatDataFiltered, 'output/flatDataFiltered.csv')
-  
-  #flatDataFilteredNoIds = flatDataNoIds[keepRows,]
-  
-  #loginfo('Writing flattened data, filtered, omitting ids')
-  #write.csv(flatDataFilteredNoIds, 'output/flatDataFilteredNoIds.csv')
+  plotAgeGroupPopularPhoneBrands(flatNarrowData)
+  plotAgeGroupPopularDeviceModels(flatNarrowData)
 }

@@ -75,6 +75,20 @@ consolidateCategories_Test = function()
   stopifnot(all.equal(expected, actual))
 }
 
+# get the day of week from a timestamp string (e.g.)
+getDow = function(dtStamp){
+  return(wday(dtStamp))  
+}
+
+# get hour of day from a timestamp string (e.g.)
+getHour = function(dtStamp){
+
+  result = sapply(dtStamp, FUN = function(x){
+    hour(x)
+  })
+  return(result) 
+}
+
 # get flag indicating if dtStamp is Saturday or Sunday
 getIsWeekend = function(dtStamp)
 {
@@ -109,12 +123,8 @@ getIsWeekend_Test = function()
   stopifnot(all.equal(expected, actual))
 }
 
+loginfo('Running unit test getIsWeekend_Test')
 getIsWeekend_Test()
-
-# get the day of week from a timestamp string (e.g.)
-getDow = function(dtStamp){
-  return(wday(dtStamp))  
-}
 
 # get time windows (e.g. "morning", "lunch", "evening", "late")
 getTimeWindow = function(dtStamp){
@@ -162,6 +172,7 @@ getTimeWindow_Test = function()
   stopifnot(all.equal(expected, actual))
 }
 
+loginfo('Running unit test getTimeWindow_Test')
 getTimeWindow_Test()
 
 transVector = c("三星","samsung",
