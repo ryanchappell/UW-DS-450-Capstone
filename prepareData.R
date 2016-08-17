@@ -24,10 +24,11 @@ if (interactive()) {
   
   # these two data files (events, app_events) are large, 
   # providing these limits
-  maxEventsToRead = 100000
+  maxEventsToRead = Inf
   maxAppEventsToRead = 100000
   
   loginfo(paste0('maxEventsToRead is ',maxEventsToRead, ', maxAppEventsToRead is ',maxAppEventsToRead))
+  #loginfo(paste0('maxAppEventsToRead is ',maxAppEventsToRead))
 
   loginfo('Reading events.csv')
   
@@ -37,6 +38,19 @@ if (interactive()) {
                           # use character class as we would otherwise lose precision
                           # (using 'numeric') with the size of device_id values
                           colClasses = c('character', 'character', 'POSIXct',NA,NA))
+  
+  loginfo('Reading gender_age_train.csv')
+  genderAgeTrain = read.csv('data/gender_age_train.csv', 
+                       numerals = 'warn.loss',
+                       # use character class as we would otherwise lose precision
+                       # (using 'numeric') with the size of device_id values
+                       colClasses = c('character','factor', NA, 'factor'))
+  
+  loginfo('Getting intersection between genderAgeTrain and deviceEvents on device_id')
+  intersectDeviceId = intersect(genderAgeTrain$device_id, deviceEvents$device_id)
+  
+  loginfo('Omitting deviceEvents where device_id does not exist in genderAgeTrain')
+  deviceEvents = deviceEvents[deviceEvents$device_id %in% intersectDeviceId,]
   
   # add is_weekend flag
   deviceEvents$isWeekend = getIsWeekend(deviceEvents$timestamp)
@@ -80,16 +94,10 @@ if (interactive()) {
   
   loginfo('Flatten relationship (device events and app events)');
   eventData = mergeDeviceEventsAppEvents(deviceEvents, appEventCategories)
-  
-  loginfo('Reading gender_age_train.csv')
-  genderAge = read.csv('data/gender_age_train.csv', 
-                       numerals = 'warn.loss',
-                       # use character class as we would otherwise lose precision
-                       # (using 'numeric') with the size of device_id values
-                       colClasses = c('character','factor', NA, 'factor'))
+
 
   loginfo('Flatten relationship (gender/age and phone event data)')
-  genderAgeDevice = mergeAgeGenderDevice(genderAge, eventData)
+  genderAgeDevice = mergeAgeGenderDevice(genderAgeTrain, eventData)
 
   
   loginfo('Reading phone_brand_device_model.csv')
@@ -110,9 +118,9 @@ if (interactive()) {
   loginfo('Removing some columns from flattened data')
   flatNarrowData = data.frame(flatData)
   flatNarrowData$event_id = NULL
-  flatNarrowData$app_id = NULL
+  #flatNarrowData$app_id = NULL
   flatNarrowData$label_id = NULL
-  flatNarrowData$is_active = NULL
+  #flatNarrowData$is_active = NULL
   flatNarrowData$longitude = NULL
   flatNarrowData$latitude = NULL
   flatNarrowData$timestamp = NULL
