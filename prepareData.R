@@ -28,7 +28,6 @@ if (interactive()) {
   maxAppEventsToRead = 100000
   
   loginfo(paste0('maxEventsToRead is ',maxEventsToRead, ', maxAppEventsToRead is ',maxAppEventsToRead))
-  #loginfo(paste0('maxAppEventsToRead is ',maxAppEventsToRead))
 
   loginfo('Reading label_categories.csv')
   label_categories_csv = read.csv('data/label_categories.csv',
@@ -69,6 +68,15 @@ if (interactive()) {
                           # (using 'numeric') with the size of device_id values
                           colClasses = c('character', 'character', 'POSIXct',NA,NA))
   
+  # add is_weekend flag
+  events_csv$isWeekend = getIsWeekend(events_csv$timestamp)
+  # add day of week feature
+  events_csv$dow = getDow(events_csv$timestamp)
+  # add time window feature (e.g. "morning", "afternoon")
+  events_csv$timeWindow = getTimeWindow(events_csv$timestamp)
+  # add hour of day
+  events_csv$hour = getHour(events_csv$timestamp)  
+  
   loginfo('Flatten relationship (device events and app events)');
   mergedData = merge(events_csv, mergedData, by = "event_id")
   
@@ -95,57 +103,34 @@ if (interactive()) {
   intersectDeviceId = intersect(gender_age_train_csv$device_id, mergedData$device_id)
   
   loginfo('Omitting mergedData where device_id does not exist in gender_age_train_csv')
-  mergedData = mergedData[mergedData$device_id %in% intersectDeviceId,]
-  
-  # add is_weekend flag
-  mergedData$isWeekend = getIsWeekend(mergedData$timestamp)
-  # add day of week feature
-  mergedData$dow = getDow(mergedData$timestamp)
-  # add time window feature (e.g. "morning", "afternoon")
-  mergedData$timeWindow = getTimeWindow(mergedData$timestamp)
-  # add hour of day
-  mergedData$hour = getHour(mergedData$timestamp)
-
+  trainIntersection = mergedData[mergedData$device_id %in% intersectDeviceId,]
 
   loginfo('Flatten relationship (gender/age and phone event data)')
-  genderAgeDevice = merge(gender_age_train_csv, mergedData, by = "device_id")
-
-  
-  loginfo('Reading phone_brand_device_model.csv')
-  # TODO: review character encoding, e.g. values like 'å°ç±³' for phone_brand column
-  phone_brand_device_model_csv = read.csv('data/phone_brand_device_model.csv', 
-                        encoding="UTF-8", 
-                        numerals = 'warn.loss',
-                        # use character class as we would otherwise lose precision
-                        # (using 'numeric') with the size of device_id values
-                        colClasses = c('character','factor','factor'))
-  
-  loginfo('Flatten relationship (gender/age and phone specs)')
-  mergedData = merge(genderAgeDevice, phone_brand_device_model_csv, by = "device_id", all.x = TRUE)
+  trainData = merge(gender_age_train_csv, trainIntersection, by = "device_id")
   
   loginfo('Writing flattened data')
-  write.csv(mergedData, 'output/mergedData.csv')
+  write.csv(trainData, 'output/trainData.csv')
   
   loginfo('Removing some columns from flattened data')
-  mergedDataNarrow = data.frame(mergedData)
-  mergedDataNarrow$event_id = NULL
-  #mergedDataNarrow$app_id = NULL
-  mergedDataNarrow$label_id = NULL
-  #mergedDataNarrow$is_active = NULL
-  mergedDataNarrow$longitude = NULL
-  mergedDataNarrow$latitude = NULL
-  mergedDataNarrow$timestamp = NULL
-  mergedDataNarrow$is_installed = NULL
-  mergedDataNarrow$gender = NULL
-  mergedDataNarrow$age = NULL
-  mergedDataNarrow$category = NULL
+  trainDataNarrow = data.frame(trainData)
+  trainDataNarrow$event_id = NULL
+  #trainDataNarrow$app_id = NULL
+  trainDataNarrow$label_id = NULL
+  #trainDataNarrow$is_active = NULL
+  trainDataNarrow$longitude = NULL
+  trainDataNarrow$latitude = NULL
+  trainDataNarrow$timestamp = NULL
+  trainDataNarrow$is_installed = NULL
+  #trainDataNarrow$gender = NULL
+  #trainDataNarrow$age = NULL
+  trainDataNarrow$category = NULL
   
   # de-duplicate
-  mergedDataNarrow = unique(mergedDataNarrow)
+  trainDataNarrow = unique(trainDataNarrow)
   
   loginfo('Writing flattened, narrowed data (omitting some columns)')
-  write.csv(mergedDataNarrow, 'output/mergedDataNarrow.csv')
+  write.csv(trainDataNarrow, 'output/trainDataNarrow.csv')
 
-  #plotAgeGroupPopularPhoneBrands(mergedDataNarrow)
-  #plotAgeGroupPopularDeviceModels(mergedDataNarrow)
+  #plotAgeGroupPopularPhoneBrands(trainDataNarrow)
+  #plotAgeGroupPopularDeviceModels(trainDataNarrow)
 }

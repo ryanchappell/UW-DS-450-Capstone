@@ -11,41 +11,6 @@
 install.packages('lubridate')
 library(lubridate)
 
-# function to LEFT JOIN on label_id
-#mergeAppLabelCategories = function(appLabels, labelCategories)
-#{
-#  result = merge(appLabels, labelCategories, by = "label_id", all.x = TRUE)
-#  return(result)
-#}
-
-# function to LEFT JOIN on app_id
-#mergeAppEventCategories = function(appEvents, appCategories)
-#{
-#  result = merge(appEvents, appCategories, by = "app_id", all.x = TRUE)
-#  return(result)
-#}
-
-# function to INNER JOIN on event_id
-#mergeDeviceEventsAppEvents = function(appEvents, appEventCategories)
-#{
-#  result = merge(appEvents, appEventCategories, by = "event_id")
-#  return(result)
-#}
-
-# function to INNER JOIN on device_id
-#mergeAgeGenderDevice = function(ageGender, device)
-#{
-#  result = merge(ageGender, device, by = "device_id")
-#  return(result)
-#}
-
-# function to LEFT JOIN on device_id
-#mergeGenderAgePhoneSpecs = function(genderAgeDevice, phoneSpecs)
-#{
-#  result = merge(genderAgeDevice, phoneSpecs, by = "device_id", all.x = TRUE)
-#  return(result)
-#}
-
 # TODO: come back to this if you have time (low priority)
 consolidateCategories = function(categories)
 {
