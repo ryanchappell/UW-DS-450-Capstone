@@ -46,8 +46,12 @@ if (interactive()) {
                             colClasses = c('character'))
   
   
-  loginfo('Flatten relationship  (app category)')
+  loginfo('Merging app_labels_csv and label_categories_csv')
   mergedData = merge(app_labels_csv, label_categories_csv, by = "label_id", all.x = TRUE)
+  
+  # remove these (they are now in mergedData)
+  rm(app_labels_csv)
+  rm(label_categories_csv)
   
   loginfo('Reading app_events.csv')
   app_events_csv = read.csv('data/app_events.csv', 
@@ -57,8 +61,11 @@ if (interactive()) {
                             # (using 'numeric') with the size of app_id values
                             colClasses = c(NA,'character', 'factor', 'factor'))
   
-  loginfo('Flatten relationship (app events and app categories)')
+  loginfo('Merging app_events_csv')
   mergedData = merge(app_events_csv, mergedData, by = "app_id", all.x = TRUE)
+  
+  # remove these (they are now in mergedData)
+  rm(app_events_csv)
   
   loginfo('Reading events.csv')
   events_csv = read.csv('data/events.csv', header = TRUE, 
@@ -77,8 +84,11 @@ if (interactive()) {
   # add hour of day
   events_csv$hour = getHour(events_csv$timestamp)  
   
-  loginfo('Flatten relationship (device events and app events)');
+  loginfo('Merging events_csv')
   mergedData = merge(events_csv, mergedData, by = "event_id")
+  
+  # remove these (they are now in mergedData)
+  rm(events_csv)
   
   loginfo('Reading phone_brand_device_model.csv')
   # TODO: review character encoding, e.g. values like 'å°ç±³' for phone_brand column
@@ -89,8 +99,11 @@ if (interactive()) {
                                           # (using 'numeric') with the size of device_id values
                                           colClasses = c('character','factor','factor'))
   
-  loginfo('Flatten relationship (gender/age and phone specs)')
+  loginfo('Merging phone_brand_device_model_csv')
   mergedData = merge(mergedData, phone_brand_device_model_csv, by = "device_id")
+  
+  # remove these (they are now in mergedData)
+  rm(phone_brand_device_model_csv)
   
   ############## set up training data
   loginfo('Reading gender_age_train.csv')
@@ -106,8 +119,15 @@ if (interactive()) {
   loginfo('Omitting mergedData where device_id does not exist in gender_age_train_csv')
   trainIntersectionData = mergedData[mergedData$device_id %in% trainIntersection,]
 
-  loginfo('Flatten relationship (gender/age and phone event data)')
+  # remove this (now using trainIntersectionData)
+  rm(mergedData)
+  
+  loginfo('Merging gender_age_train_csv')
   trainData = merge(gender_age_train_csv, trainIntersectionData, by = "device_id")
+  
+  # remove these (they are now in mergedData)
+  rm(gender_age_train_csv)
+  rm(trainIntersectionData)
   
   loginfo('Writing flattened data')
   write.csv(trainData, 'output/trainData.csv')
@@ -131,46 +151,6 @@ if (interactive()) {
   
   loginfo('Writing flattened, narrowed data (omitting some columns)')
   write.csv(trainDataNarrow, 'output/trainDataNarrow.csv')
-  
-  ############## set up testing data
-  loginfo('Reading gender_age_train.csv')
-  gender_age_test_csv = read.csv('data/gender_age_test.csv', 
-                                  numerals = 'warn.loss',
-                                  # use character class as we would otherwise lose precision
-                                  # (using 'numeric') with the size of device_id values
-                                  colClasses = c('character','factor', NA, 'factor'))
-  
-  loginfo('Getting intersection between gender_age_train_csv and mergedData on device_id')
-  testIntersection = intersect(gender_age_test_csv$device_id, mergedData$device_id)
-  
-  loginfo('Omitting mergedData where device_id does not exist in gender_age_train_csv')
-  testIntersectionData = mergedData[mergedData$device_id %in% testIntersection,]
-  
-  loginfo('Flatten relationship (gender/age and phone event data)')
-  testData = merge(gender_age_test_csv, testIntersectionData, by = "device_id")
-  
-  loginfo('Writing flattened data')
-  write.csv(testData, 'output/testData.csv')
-  
-  loginfo('Removing some columns from flattened data')
-  testDataNarrow = data.frame(testData)
-  testDataNarrow$event_id = NULL
-  #testDataNarrow$app_id = NULL
-  testDataNarrow$label_id = NULL
-  #testDataNarrow$is_active = NULL
-  testDataNarrow$longitude = NULL
-  testDataNarrow$latitude = NULL
-  testDataNarrow$timestamp = NULL
-  testDataNarrow$is_installed = NULL
-  #testDataNarrow$gender = NULL
-  #testDataNarrow$age = NULL
-  testDataNarrow$category = NULL
-  
-  # de-duplicate
-  testDataNarrow = unique(testDataNarrow)
-  
-  loginfo('Writing flattened, narrowed data (omitting some columns)')
-  write.csv(testDataNarrow, 'output/testDataNarrow.csv')
 
   #plotAgeGroupPopularPhoneBrands(trainDataNarrow)
   #plotAgeGroupPopularDeviceModels(trainDataNarrow)
