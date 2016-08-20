@@ -105,7 +105,7 @@ if (interactive()) {
   # remove these (they are now in mergedData)
   rm(phone_brand_device_model_csv)
   
-  ############## set up training data
+  ############## set up TRAINING data
   loginfo('Reading gender_age_train.csv')
   gender_age_train_csv = read.csv('data/gender_age_train.csv', 
                        numerals = 'warn.loss',
@@ -120,7 +120,7 @@ if (interactive()) {
   trainIntersectionData = mergedData[mergedData$device_id %in% trainIntersection,]
 
   # remove this (now using trainIntersectionData)
-  rm(mergedData)
+#  rm(mergedData)
   
   loginfo('Merging gender_age_train_csv')
   trainData = merge(gender_age_train_csv, trainIntersectionData, by = "device_id")
@@ -129,10 +129,10 @@ if (interactive()) {
   rm(gender_age_train_csv)
   rm(trainIntersectionData)
   
-  loginfo('Writing flattened data')
+  loginfo('Writing trainData.csv')
   write.csv(trainData, 'output/trainData.csv')
   
-  loginfo('Removing some columns from flattened data')
+  loginfo('Removing some columns from trainData for trainDataNarrow')
   trainDataNarrow = data.frame(trainData)
   trainDataNarrow$event_id = NULL
   #trainDataNarrow$app_id = NULL
@@ -151,6 +151,53 @@ if (interactive()) {
   
   loginfo('Writing flattened, narrowed data (omitting some columns)')
   write.csv(trainDataNarrow, 'output/trainDataNarrow.csv')
+  
+  ############## set up TEST data
+  loginfo('Reading gender_age_test.csv')
+  gender_age_test_csv = read.csv('data/gender_age_test.csv', 
+                                  numerals = 'warn.loss',
+                                  # use character class as we would otherwise lose precision
+                                  # (using 'numeric') with the size of device_id values
+                                  colClasses = c('character'))
+  
+  loginfo('Getting intersection between gender_age_test_csv and mergedData on device_id')
+  testIntersection = intersect(gender_age_test_csv$device_id, mergedData$device_id)
+  
+  loginfo('Omitting mergedData where device_id does not exist in gender_age_test_csv')
+  testIntersectionData = mergedData[mergedData$device_id %in% testIntersection,]
+  
+  # remove this (now using trainIntersectionData)
+  #  rm(mergedData)
+  
+  loginfo('Merging gender_age_test_csv')
+  testData = merge(gender_age_test_csv, testIntersectionData, by = "device_id")
+  
+  # remove these (they are now in mergedData)
+  rm(gender_age_test_csv)
+  rm(testIntersectionData)
+  
+  loginfo('Writing testData.csv')
+  write.csv(testData, 'output/testData.csv')
+  
+  loginfo('Removing some columns from testData for testDataNarrow')
+  testDataNarrow = data.frame(testData)
+  testDataNarrow$event_id = NULL
+  #testDataNarrow$app_id = NULL
+  testDataNarrow$label_id = NULL
+  #testDataNarrow$is_active = NULL
+  testDataNarrow$longitude = NULL
+  testDataNarrow$latitude = NULL
+  testDataNarrow$timestamp = NULL
+  testDataNarrow$is_installed = NULL
+  #testDataNarrow$gender = NULL
+  #testDataNarrow$age = NULL
+  testDataNarrow$category = NULL
+  
+  # de-duplicate
+  testDataNarrow = unique(testDataNarrow)
+  
+  loginfo('Writing testDataNarrow.csv')
+  write.csv(testDataNarrow, 'output/testDataNarrow.csv')
 
   #plotAgeGroupPopularPhoneBrands(trainDataNarrow)
   #plotAgeGroupPopularDeviceModels(trainDataNarrow)
