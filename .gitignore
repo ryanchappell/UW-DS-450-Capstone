@@ -63,3 +63,6 @@ output/*
 # R scratch files
 scratch.R
 .RData
+
+# misc. scratch files
+queries.sql
