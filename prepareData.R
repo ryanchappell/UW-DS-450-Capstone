@@ -7,10 +7,15 @@
 ##--------------------------------------------
 
 ##-----Load Libraries-----
-install.packages('logging')
+
+if('logging' %in% rownames(installed.packages()) == FALSE) {
+  install.packages('logging')
+}
+
 library(logging)
 
 source('prepareDataUtils.R')
+source('prepareAdjustedData.R')
 source('exploreData.R')
 
 ########## CHANGE THIS for your local machine
@@ -28,8 +33,17 @@ if (interactive()) {
   maxAppEventsToRead = 100000
   readAppEvents = FALSE
   
-  #loginfo(paste0('maxEventsToRead is ',maxEventsToRead, ', maxAppEventsToRead is ',maxAppEventsToRead))
-
+  # set this to TRUE if adjusted-data/phone_brand_device_model_unique.csv 
+  # should be recreated
+  recreateAdjustedPhoneBrandFile = FALSE
+  
+  
+  # this call creates the adjusted-data/phone_brand_device_model_unique.csv 
+  # file referenced below
+  if (!file.exists('adjusted-data/phone_brand_device_model_unique.csv') || recreateAdjustedPhoneBrandFile){
+    createAdjustedPhoneBrandDataFile()
+  }
+  
   loginfo('Reading adjusted-data/phone_brand_device_model_unique.csv')
   # TODO: review character encoding, e.g. values like 'å°ç±³' for phone_brand column
   phone_brand_device_model_csv_unique = read.csv('adjusted-data/phone_brand_device_model_unique.csv', 
@@ -139,22 +153,8 @@ if (interactive()) {
   write.csv(trainData, 'output/trainData.csv')
   
   loginfo('Removing some columns from trainData for trainDataNarrow')
-  trainDataNarrow = data.frame(trainData)
-  trainDataNarrow$event_id = NULL
-  trainDataNarrow$app_id = NULL
-  trainDataNarrow$label_id = NULL
-  #trainDataNarrow$is_active = NULL
-  trainDataNarrow$longitude = NULL
-  trainDataNarrow$latitude = NULL
-  trainDataNarrow$timestamp = NULL
-  trainDataNarrow$is_installed = NULL
-  #trainDataNarrow$gender = NULL
-  #trainDataNarrow$age = NULL
-  trainDataNarrow$category = NULL
-  
-  # de-duplicate
-  trainDataNarrow = unique(trainDataNarrow)
-  
+  trainDataNarrow = getNarrowDataFrame(trainData)
+
   loginfo('Writing flattened, narrowed data (omitting some columns)')
   write.csv(trainDataNarrow, 'output/trainDataNarrow.csv')
   
@@ -186,22 +186,8 @@ if (interactive()) {
   write.csv(testData, 'output/testData.csv')
   
   loginfo('Removing some columns from testData for testDataNarrow')
-  testDataNarrow = data.frame(testData)
-  testDataNarrow$event_id = NULL
-  testDataNarrow$app_id = NULL
-  testDataNarrow$label_id = NULL
-  #testDataNarrow$is_active = NULL
-  testDataNarrow$longitude = NULL
-  testDataNarrow$latitude = NULL
-  testDataNarrow$timestamp = NULL
-  testDataNarrow$is_installed = NULL
-  #testDataNarrow$gender = NULL
-  #testDataNarrow$age = NULL
-  testDataNarrow$category = NULL
-  
-  # de-duplicate
-  testDataNarrow = unique(testDataNarrow)
-  
+  testDataNarrow = getNarrowDataFrame(testData)
+
   loginfo('Writing testDataNarrow.csv')
   write.csv(testDataNarrow, 'output/testDataNarrow.csv')
 

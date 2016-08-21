@@ -8,7 +8,9 @@
 
 # Note: this lubridate package doesn't appear to install correctly when using
 # R version 3.3.1
-install.packages('lubridate')
+if('lubridate' %in% rownames(installed.packages()) == FALSE) {
+  install.packages('lubridate')
+}
 library(lubridate)
 
 # TODO: come back to this if you have time (low priority)
@@ -139,6 +141,31 @@ getTimeWindow_Test = function()
 
 loginfo('Running unit test getTimeWindow_Test')
 getTimeWindow_Test()
+
+getNarrowDataFrame = function(data){
+  dataNarrow = data.frame(data)
+  dataNarrow$event_id = NULL
+  dataNarrow$app_id = NULL
+  dataNarrow$label_id = NULL
+  #dataNarrow$is_active = NULL
+  dataNarrow$longitude = NULL
+  dataNarrow$latitude = NULL
+  dataNarrow$timestamp = NULL
+  dataNarrow$is_installed = NULL
+  #dataNarrow$gender = NULL
+  #dataNarrow$age = NULL
+  dataNarrow$category = NULL
+  
+  dataNarrow$isWeekend = NULL
+  dataNarrow$dow = NULL
+  dataNarrow$timeWindow = NULL
+  dataNarrow$hour = NULL
+  
+  # de-duplicate
+  dataNarrow = unique(dataNarrow)
+  
+  return(dataNarrow)
+}
 
 # transVector = c("三星","samsung",
 #                 "天语","Ktouch",
