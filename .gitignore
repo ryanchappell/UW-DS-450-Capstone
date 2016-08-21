@@ -53,6 +53,8 @@ data/*
 !data/README.md
 output/*
 !output/README.md
+adjusted-data/*
+!adjusted-data/README.md
 
 # R user files
 .Rhistory
@@ -66,3 +68,4 @@ scratch.R
 
 # misc. scratch files
 queries.sql
+adjusted-data/phone_brand_device_model_unique.csv

@@ -26,54 +26,27 @@ if (interactive()) {
   # providing these limits
   maxEventsToRead = 100000
   maxAppEventsToRead = 100000
+  readAppEvents = FALSE
   
-  loginfo(paste0('maxEventsToRead is ',maxEventsToRead, ', maxAppEventsToRead is ',maxAppEventsToRead))
+  #loginfo(paste0('maxEventsToRead is ',maxEventsToRead, ', maxAppEventsToRead is ',maxAppEventsToRead))
 
-  loginfo('Reading label_categories.csv')
-  label_categories_csv = read.csv('data/label_categories.csv',
-                                  numerals = 'warn.loss')
+  loginfo('Reading adjusted-data/phone_brand_device_model_unique.csv')
+  # TODO: review character encoding, e.g. values like 'å°ç±³' for phone_brand column
+  phone_brand_device_model_csv_unique = read.csv('adjusted-data/phone_brand_device_model_unique.csv', 
+                                                 encoding="UTF-8", 
+                                                 numerals = 'warn.loss',
+                                                 # use character class as we would otherwise lose precision
+                                                 # (using 'numeric') with the size of device_id values
+                                                 colClasses = c('character','factor','factor'))
   
-  # TODO: the consolidateCategories function is not done, 
-  # come back if you have time (low priority)
-  #loginfo('Consolidating categories')
-  #conCategories = consolidateCategories(label_categories_csv$category)
-  
-  loginfo('Reading app_labels.csv')
-  app_labels_csv = read.csv('data/app_labels.csv',
-                            numerals = 'warn.loss',
-                            # use character class as we would otherwise lose precision
-                            # (using 'numeric') with the size of app_id values
-                            colClasses = c('character'))
-  
-  
-  loginfo('Merging app_labels_csv and label_categories_csv')
-  mergedData = merge(app_labels_csv, label_categories_csv, by = "label_id", all.x = TRUE)
-  
-  # remove these (they are now in mergedData)
-  rm(app_labels_csv)
-  rm(label_categories_csv)
-  
-  loginfo('Reading app_events.csv')
-  app_events_csv = read.csv('data/app_events.csv', 
-                            numerals = 'warn.loss',
-                            nrows = maxAppEventsToRead,
-                            # use character class as we would otherwise lose precision
-                            # (using 'numeric') with the size of app_id values
-                            colClasses = c(NA,'character', 'factor', 'factor'))
-  
-  loginfo('Merging app_events_csv')
-  mergedData = merge(app_events_csv, mergedData, by = "app_id", all.x = TRUE)
-  
-  # remove these (they are now in mergedData)
-  rm(app_events_csv)
-  
+
   loginfo('Reading events.csv')
   events_csv = read.csv('data/events.csv', header = TRUE, 
-                          nrows = maxEventsToRead, 
-                          numerals = 'warn.loss',
-                          # use character class as we would otherwise lose precision
-                          # (using 'numeric') with the size of device_id values
-                          colClasses = c('character', 'character', 'POSIXct',NA,NA))
+                        nrows = maxEventsToRead, 
+                        numerals = 'warn.loss',
+                        # use character class as we would otherwise lose precision
+                        # (using 'numeric') with the size of device_id values
+                        colClasses = c('character', 'character', 'POSIXct',NA,NA))
   
   # add is_weekend flag
   events_csv$isWeekend = getIsWeekend(events_csv$timestamp)
@@ -82,28 +55,61 @@ if (interactive()) {
   # add time window feature (e.g. "morning", "afternoon")
   events_csv$timeWindow = getTimeWindow(events_csv$timestamp)
   # add hour of day
-  events_csv$hour = getHour(events_csv$timestamp)  
+  events_csv$hour = getHour(events_csv$timestamp) 
   
-  loginfo('Merging events_csv')
-  mergedData = merge(events_csv, mergedData, by = "event_id")
+  loginfo('Merging phone_brand_device_model_csv_unique')
+  mergedData = merge(phone_brand_device_model_csv_unique, events_csv, by = "device_id")
   
   # remove these (they are now in mergedData)
   rm(events_csv)
-  
-  loginfo('Reading phone_brand_device_model.csv')
-  # TODO: review character encoding, e.g. values like 'å°ç±³' for phone_brand column
-  phone_brand_device_model_csv = read.csv('data/phone_brand_device_model.csv', 
-                                          encoding="UTF-8", 
-                                          numerals = 'warn.loss',
-                                          # use character class as we would otherwise lose precision
-                                          # (using 'numeric') with the size of device_id values
-                                          colClasses = c('character','factor','factor'))
-  
-  loginfo('Merging phone_brand_device_model_csv')
-  mergedData = merge(mergedData, phone_brand_device_model_csv, by = "device_id")
-  
   # remove these (they are now in mergedData)
-  rm(phone_brand_device_model_csv)
+  rm(phone_brand_device_model_csv_unique)
+
+  if (readAppEvents){
+    loginfo('Reading app_events.csv')
+    app_events_csv = read.csv('data/app_events.csv', 
+                              numerals = 'warn.loss',
+                              nrows = maxAppEventsToRead,
+                              # use character class as we would otherwise lose precision
+                              # (using 'numeric') with the size of app_id values
+                              colClasses = c(NA,'character', 'factor', 'factor'))
+    
+    loginfo('Merging app_events_csv')
+    mergedData = merge(mergedData, app_events_csv, by = "event_id")#, all.x = TRUE)
+    
+    # remove these (they are now in mergedData)
+    rm(app_events_csv)
+    
+    loginfo('Reading app_labels.csv')
+    app_labels_csv = read.csv('data/app_labels.csv',
+                              numerals = 'warn.loss',
+                              # use character class as we would otherwise lose precision
+                              # (using 'numeric') with the size of app_id values
+                              colClasses = c('character'))
+    
+    loginfo('Merging app_labels_csv')
+    mergedData = merge(mergedData, app_labels_csv, by = "app_id")#, all.x = TRUE)
+    
+    # remove these (they are now in mergedData)
+    rm(app_labels_csv)
+    
+    # TODO: the consolidateCategories function is not done, 
+    # come back if you have time (low priority)
+    #loginfo('Consolidating categories')
+    #conCategories = consolidateCategories(label_categories_csv$category)
+    
+  
+    loginfo('Reading label_categories.csv')
+    label_categories_csv = read.csv('data/label_categories.csv',
+                                    numerals = 'warn.loss')
+    
+    
+    loginfo('Merging app_labels_csv and label_categories_csv')
+    mergedData = merge(mergedData, label_categories_csv, by = "label_id")#, all.x = TRUE)
+    
+    # remove these (they are now in mergedData)
+    rm(label_categories_csv)
+  }
   
   ############## set up TRAINING data
   loginfo('Reading gender_age_train.csv')
@@ -135,7 +141,7 @@ if (interactive()) {
   loginfo('Removing some columns from trainData for trainDataNarrow')
   trainDataNarrow = data.frame(trainData)
   trainDataNarrow$event_id = NULL
-  #trainDataNarrow$app_id = NULL
+  trainDataNarrow$app_id = NULL
   trainDataNarrow$label_id = NULL
   #trainDataNarrow$is_active = NULL
   trainDataNarrow$longitude = NULL
@@ -182,7 +188,7 @@ if (interactive()) {
   loginfo('Removing some columns from testData for testDataNarrow')
   testDataNarrow = data.frame(testData)
   testDataNarrow$event_id = NULL
-  #testDataNarrow$app_id = NULL
+  testDataNarrow$app_id = NULL
   testDataNarrow$label_id = NULL
   #testDataNarrow$is_active = NULL
   testDataNarrow$longitude = NULL
