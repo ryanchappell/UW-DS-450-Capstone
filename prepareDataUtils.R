@@ -142,6 +142,18 @@ getTimeWindow_Test = function()
 loginfo('Running unit test getTimeWindow_Test')
 getTimeWindow_Test()
 
+getTimeWindowCounts = function(data){
+  timeWindowTable = table(data.frame(list(device_id = data$device_id, timeWindow = data$timeWindow)))
+  #head(timeWindowTable)
+  #head(row.names(timeWindowTable))
+  timeWindowDf = as.data.frame.matrix(timeWindowTable, row.names = row.names(timeWindowTable))
+  timeWindowDf = cbind(device_id = row.names(timeWindowTable), timeWindowDf)
+  #head(timeWindowDf)
+  #names(timeWindowDf)
+  
+  return(timeWindowDf)
+}
+
 getNarrowDataFrame = function(data){
   dataNarrow = data.frame(data)
   dataNarrow$event_id = NULL

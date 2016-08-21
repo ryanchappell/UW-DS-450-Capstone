@@ -71,6 +71,15 @@ if (interactive()) {
   # add hour of day
   events_csv$hour = getHour(events_csv$timestamp) 
   
+  loginfo('Get time window counts')
+  timeWindowCounts = getTimeWindowCounts(events_csv)
+  
+  # remove timeWindow since we are done with it
+  events_csv$timeWindow = NULL
+  
+  loginfo('Add time window counts to events_csv')
+  events_csv = merge(events_csv, timeWindowCounts, by = "device_id")
+  
   loginfo('Merging phone_brand_device_model_csv_unique')
   mergedData = merge(phone_brand_device_model_csv_unique, events_csv, by = "device_id")
   
