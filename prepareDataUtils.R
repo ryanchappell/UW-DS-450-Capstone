@@ -48,12 +48,43 @@ getDow = function(dtStamp){
 }
 
 # get hour of day from a timestamp string (e.g.)
-getHour = function(dtStamp){
+# getHour = function(dtStamp){
+# 
+#   result = sapply(dtStamp, FUN = function(x){
+#     hour(x)
+#   })
+#   return(result) 
+# }
 
-  result = sapply(dtStamp, FUN = function(x){
-    hour(x)
-  })
-  return(result) 
+getDowCounts = function(data){
+  dowTable = table(data.frame(list(device_id = data$device_id, dow = data$dow)))
+  #head(timeWindowTable)
+  #head(row.names(timeWindowTable))
+  dowTableDf = as.data.frame.matrix(dowTable, row.names = row.names(dowTable))
+  dowTableDf = cbind(device_id = row.names(dowTable), dowTableDf)
+  #head(timeWindowDf)
+  #names(timeWindowDf)
+  names(dowTableDf) = c("device_id", 
+                        "dowSunday",
+                        "dowMonday",
+                        "dowTuesday",
+                        "dowWednesday",
+                        "dowThursday",
+                        "dowFriday",
+                        "dowSaturday")
+  return(dowTableDf)
+}
+
+getIsWeekendCounts = function(data = events_csv){
+  isWeekendTable = table(data.frame(list(device_id = data$device_id, isWeekend = data$isWeekend)))
+  #head(timeWindowTable)
+  #head(row.names(timeWindowTable))
+  isWeekendDf = as.data.frame.matrix(isWeekendTable, row.names = row.names(isWeekendTable))
+  isWeekendDf = cbind(device_id = row.names(isWeekendTable), isWeekendDf)
+  #head(timeWindowDf)
+  #names(timeWindowDf)
+  names(isWeekendDf) = c("device_id", "dayIsNotWeekend", "dayIsWeekend")
+  return(isWeekendDf)
 }
 
 # get flag indicating if dtStamp is Saturday or Sunday

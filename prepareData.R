@@ -64,13 +64,34 @@ if (interactive()) {
   
   # add is_weekend flag
   events_csv$isWeekend = getIsWeekend(events_csv$timestamp)
+  
+  loginfo('Get weekend counts')
+  isWeekendCounts = getIsWeekendCounts(events_csv)
+  
+  # we are done with isWeekend
+  events_csv$isWeekend = NULL
+  
+  loginfo('Add weekend counts to events_csv')
+  events_csv = merge(events_csv, isWeekendCounts, by = "device_id")
+  
   # add day of week feature
   events_csv$dow = getDow(events_csv$timestamp)
+  
+  
   # add time window feature (e.g. "morning", "afternoon")
   events_csv$timeWindow = getTimeWindow(events_csv$timestamp)
   # add hour of day
-  events_csv$hour = getHour(events_csv$timestamp) 
+  #events_csv$hour = getHour(events_csv$timestamp) 
   
+  loginfo('Get day of week counts')
+  dowCounts = getDowCounts(events_csv)
+  
+  loginfo('Add day of week counts to events_csv')
+  events_csv = merge(events_csv, dowCounts, by = "device_id")
+
+  # remove down since we are done with it
+  events_csv$dow = NULL
+    
   loginfo('Get time window counts')
   timeWindowCounts = getTimeWindowCounts(events_csv)
   
