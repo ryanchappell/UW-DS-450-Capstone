@@ -220,6 +220,15 @@ getAppInstalledCounts = function(data) {
   return(result)
 }
 
+getActiveAppCounts = function(data) {
+  agg = aggregate(x = as.integer(data$is_active), by = list(event_id = data$event_id),
+                  FUN = function(x) {
+                    return(sum(x))
+                  })
+  
+  names(agg) = c("event_id", "activeAppCount")
+}
+
 # transVector = c("三星","samsung",
 #                 "天语","Ktouch",
 #                 "海信","hisense",
