@@ -33,8 +33,8 @@ maxAppEventsToRead = 100000
 readAppEvents = FALSE
 
 # default batch stuff (defaults to no batch)
-deviceBatchSize = 0
-deviceBatchStartIndex = 0
+deviceBatchSize = 40000
+deviceBatchStartIndex = 20000
 
 args = commandArgs(trailingOnly = TRUE)
 
@@ -88,8 +88,13 @@ if (deviceBatchSize > 0 && deviceBatchStartIndex >= 0){
                                                  # (using 'numeric') with the size of device_id values
                                                  colClasses = c('character','factor','factor'),
                                                 skip = deviceBatchStartIndex,
-                                                nrows = deviceBatchSize)
+                                                nrows = deviceBatchSize, 
+                                                # explicitly set column names; when skipping rows (skip param), the header
+                                                # is not picked up
+                                                col.names = c("row", "device_id", "phone_brand", "device_model"))
   
+  # don't need this
+  phone_brand_device_model_csv_unique$row = NULL
 
   loginfo('Reading events.csv')
   events_csv = read.csv('data/events.csv', header = TRUE, 
@@ -108,23 +113,20 @@ if (deviceBatchSize > 0 && deviceBatchStartIndex >= 0){
   # we are done with isWeekend
   events_csv$isWeekend = NULL
   
-  loginfo('Add weekend counts to events_csv')
-  events_csv = merge(events_csv, isWeekendCounts, by = "device_id")
+  loginfo('Add weekend counts to phone_brand_device_model_csv_unique')
+  mergedData = merge(phone_brand_device_model_csv_unique, isWeekendCounts, by = "device_id")
   
   # add day of week feature
   events_csv$dow = getDow(events_csv$timestamp)
   
-  
   # add time window feature (e.g. "morning", "afternoon")
   events_csv$timeWindow = getTimeWindow(events_csv$timestamp)
-  # add hour of day
-  #events_csv$hour = getHour(events_csv$timestamp) 
   
   loginfo('Get day of week counts')
   dowCounts = getDowCounts(events_csv)
   
-  loginfo('Add day of week counts to events_csv')
-  events_csv = merge(events_csv, dowCounts, by = "device_id")
+  loginfo('Add day of week counts to phone_brand_device_model_csv_unique')
+  mergedData = merge(mergedData, dowCounts, by = "device_id")
 
   # remove down since we are done with it
   events_csv$dow = NULL
@@ -135,11 +137,12 @@ if (deviceBatchSize > 0 && deviceBatchStartIndex >= 0){
   # remove timeWindow since we are done with it
   events_csv$timeWindow = NULL
   
-  loginfo('Add time window counts to events_csv')
-  events_csv = merge(events_csv, timeWindowCounts, by = "device_id")
+  loginfo('Add time window counts to phone_brand_device_model_csv_unique')
+  mergedData = merge(mergedData, timeWindowCounts, by = "device_id")
   
-  loginfo('Merging phone_brand_device_model_csv_unique')
-  mergedData = merge(phone_brand_device_model_csv_unique, events_csv, by = "device_id")
+  # TODO: look at aggregating lat/long values for each device
+  #loginfo('Merging phone_brand_device_model_csv_unique')
+  #mergedData = merge(phone_brand_device_model_csv_unique, events_csv, by = "device_id")
   
   # remove these (they are now in mergedData)
   rm(events_csv)
