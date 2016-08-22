@@ -210,6 +210,16 @@ getNarrowDataFrame = function(data){
   return(dataNarrow)
 }
 
+getAppInstalledCounts = function(data) {
+  result = aggregate(x = as.integer(data$is_installed), by = list(event_id = data$event_id),
+                  FUN = function(x) {
+                    return(sum(x))
+                  })
+  
+  names(result) = c("event_id", "appCount")  
+  return(result)
+}
+
 # transVector = c("三星","samsung",
 #                 "天语","Ktouch",
 #                 "海信","hisense",
