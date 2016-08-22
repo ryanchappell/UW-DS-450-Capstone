@@ -1,6 +1,13 @@
 # UW DS 450 Capstone Project
 
-Notes on the directory structure
+## To Run (Prepare Data)
+
+1. download the data files (see /data/README.MD)
+2. Run /prepareData.R
+
+At this point, the script should have processed the data and created results in the /output folder.
+
+## Notes on the directory structure
 
 /adjusted-data
  - output data files that were slightly changed from the original (e.g. only unique rows from original data set)
