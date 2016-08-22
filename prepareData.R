@@ -33,8 +33,8 @@ maxAppEventsToRead = 100000
 readAppEvents = FALSE
 
 # default batch stuff (defaults to no batch)
-deviceBatchSize = 40000
-deviceBatchStartIndex = 20000
+deviceBatchSize = 0
+deviceBatchStartIndex = 0
 
 args = commandArgs(trailingOnly = TRUE)
 
@@ -71,12 +71,19 @@ if (deviceBatchSize > 0 && deviceBatchStartIndex >= 0){
   # set this to TRUE if adjusted-data/phone_brand_device_model_unique.csv 
   # should be recreated
   recreateAdjustedPhoneBrandFile = FALSE
+  recreateAdjustedEventsFile = FALSE
   
   
   # this call creates the adjusted-data/phone_brand_device_model_unique.csv 
   # file referenced below
   if (!file.exists('adjusted-data/phone_brand_device_model_unique.csv') || recreateAdjustedPhoneBrandFile){
     createAdjustedPhoneBrandDataFile()
+  }
+  
+  # this call creates the adjusted-data/phone_brand_device_model_unique.csv 
+  # file referenced below
+  if (!file.exists('adjusted-data/events_aggregated_features.csv') || recreateAdjustedEventsFile){
+    createAdjustedEventsDataFile()
   }
   
   loginfo('Reading adjusted-data/phone_brand_device_model_unique.csv')
@@ -88,64 +95,43 @@ if (deviceBatchSize > 0 && deviceBatchStartIndex >= 0){
                                                  # (using 'numeric') with the size of device_id values
                                                  colClasses = c('character','factor','factor'),
                                                 skip = deviceBatchStartIndex,
-                                                nrows = deviceBatchSize, 
-                                                # explicitly set column names; when skipping rows (skip param), the header
-                                                # is not picked up
-                                                col.names = c("row", "device_id", "phone_brand", "device_model"))
+                                                nrows = deviceBatchSize)
   
-  # don't need this
-  phone_brand_device_model_csv_unique$row = NULL
-
-  loginfo('Reading events.csv')
-  events_csv = read.csv('data/events.csv', header = TRUE, 
-                        nrows = maxEventsToRead, 
-                        numerals = 'warn.loss',
-                        # use character class as we would otherwise lose precision
-                        # (using 'numeric') with the size of device_id values
-                        colClasses = c('character', 'character', 'POSIXct',NA,NA))
+  loginfo('Reading adjusted-data/events_aggregated_features.csv')
+  events_aggregated_features_csv = read.csv('adjusted-data/events_aggregated_features.csv',
+                                            # skip row column and
+                                            # use character class as we would otherwise lose precision
+                                            # (using 'numeric') with the size of device_id values
+                                            colClasses = c(NA,'character'))
   
-  # add is_weekend flag
-  events_csv$isWeekend = getIsWeekend(events_csv$timestamp)
+  # remove the row number from files read
+  events_aggregated_features_csv$X = NULL
+  phone_brand_device_model_csv_unique$X = NULL
   
-  loginfo('Get weekend counts')
-  isWeekendCounts = getIsWeekendCounts(events_csv)
+  loginfo('Merging phone_brand_device_model_csv_unique and events_aggregated_features_csv')
+  mergedData = merge(phone_brand_device_model_csv_unique, events_aggregated_features_csv, by = "device_id", all.x = TRUE)
   
-  # we are done with isWeekend
-  events_csv$isWeekend = NULL
-  
-  loginfo('Add weekend counts to phone_brand_device_model_csv_unique')
-  mergedData = merge(phone_brand_device_model_csv_unique, isWeekendCounts, by = "device_id")
-  
-  # add day of week feature
-  events_csv$dow = getDow(events_csv$timestamp)
-  
-  # add time window feature (e.g. "morning", "afternoon")
-  events_csv$timeWindow = getTimeWindow(events_csv$timestamp)
-  
-  loginfo('Get day of week counts')
-  dowCounts = getDowCounts(events_csv)
-  
-  loginfo('Add day of week counts to phone_brand_device_model_csv_unique')
-  mergedData = merge(mergedData, dowCounts, by = "device_id")
-
-  # remove down since we are done with it
-  events_csv$dow = NULL
-    
-  loginfo('Get time window counts')
-  timeWindowCounts = getTimeWindowCounts(events_csv)
-  
-  # remove timeWindow since we are done with it
-  events_csv$timeWindow = NULL
-  
-  loginfo('Add time window counts to phone_brand_device_model_csv_unique')
-  mergedData = merge(mergedData, timeWindowCounts, by = "device_id")
-  
-  # TODO: look at aggregating lat/long values for each device
-  #loginfo('Merging phone_brand_device_model_csv_unique')
-  #mergedData = merge(phone_brand_device_model_csv_unique, events_csv, by = "device_id")
+  # TODO: discuss this (there are plenty of devices without events and, by extension, event timestamps),
+  # maybe we use median or mean for values? don't know...
+  # Also, this can be refactored to a loop or sapply for simplicity
+  loginfo('Replacing NA values in mergedData (devices with zero events)')
+  mergedData[is.na(mergedData$dayIsNotWeekend),]$dayIsNotWeekend = 0
+  mergedData[is.na(mergedData$dayIsWeekend),]$dayIsWeekend = 0
+  mergedData[is.na(mergedData$dowSunday),]$dowSunday = 0
+  mergedData[is.na(mergedData$dowMonday),]$dowMonday = 0
+  mergedData[is.na(mergedData$dowTuesday),]$dowTuesday = 0
+  mergedData[is.na(mergedData$dowWednesday),]$dowWednesday = 0
+  mergedData[is.na(mergedData$dowThursday),]$dowThursday = 0
+  mergedData[is.na(mergedData$dowFriday),]$dowFriday = 0
+  mergedData[is.na(mergedData$dowSaturday),]$dowSaturday = 0
+  mergedData[is.na(mergedData$afternoon),]$afternoon = 0
+  mergedData[is.na(mergedData$evening),]$evening = 0
+  mergedData[is.na(mergedData$late),]$late = 0
+  mergedData[is.na(mergedData$lunch),]$lunch = 0
+  mergedData[is.na(mergedData$morning),]$morning = 0
   
   # remove these (they are now in mergedData)
-  rm(events_csv)
+  rm(events_aggregated_features_csv)
   # remove these (they are now in mergedData)
   rm(phone_brand_device_model_csv_unique)
 
