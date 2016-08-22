@@ -4,6 +4,7 @@
 
 1. download the data files (see /data/README.MD)
 2. Run /prepareData.R
+ - this can be done in R Studio or via command line like> Rscript --no-save prepareData.R
 
 At this point, the script should have processed the data and created results in the /output folder.
 
