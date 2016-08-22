@@ -21,17 +21,52 @@ source('exploreData.R')
 ########## CHANGE THIS for your local machine
 setwd('C:/projects/UW-DS-450-Capstone')
 
-if (interactive()) {
-  # log settings
-  basicConfig('INFO')
-  addHandler(writeToFile, file = 'UW-DS-450-Capstone.log')
-  loginfo('Starting up!')
+# log settings
+basicConfig('INFO')
+addHandler(writeToFile, file = 'UW-DS-450-Capstone.log')
+loginfo('Starting up!')
+
+# these two data files (events, app_events) are large, 
+# providing these limits
+maxEventsToRead = 100000
+maxAppEventsToRead = 100000
+readAppEvents = FALSE
+
+# default batch stuff (defaults to no batch)
+deviceBatchSize = 0
+deviceBatchStartIndex = 0
+
+args = commandArgs(trailingOnly = TRUE)
+
+# test if there is at least one argument: if not, return an error
+if(length(args) == 2){
+
+  loginfo(paste0("Batching initiated by command line arguments-- deviceBatchSize: ",
+               args[1],
+               " deviceBatchStartIndex: ",
+               args[2]))
+
+  deviceBatchSize = as.numeric(args[1])
+  # the index to start on
+  deviceBatchStartIndex = as.numeric(args[2])
+    
+  # throw error and exit if arguments are not valid
+  stopifnot(deviceBatchSize > 0 && deviceBatchStartIndex >= 0)  
+}
   
-  # these two data files (events, app_events) are large, 
-  # providing these limits
-  maxEventsToRead = 100000
-  maxAppEventsToRead = 100000
-  readAppEvents = FALSE
+outputFileAppend = NULL
+
+if (deviceBatchSize > 0 && deviceBatchStartIndex >= 0){
+  outputFileAppend = paste0("_deviceBatchSize-", deviceBatchSize,
+                            "-deviceBatchStartIndex-", deviceBatchStartIndex)
+}
+
+#if (interactive()) {
+
+
+  
+  # for device batching
+  
   
   # set this to TRUE if adjusted-data/phone_brand_device_model_unique.csv 
   # should be recreated
@@ -51,7 +86,9 @@ if (interactive()) {
                                                  numerals = 'warn.loss',
                                                  # use character class as we would otherwise lose precision
                                                  # (using 'numeric') with the size of device_id values
-                                                 colClasses = c('character','factor','factor'))
+                                                 colClasses = c('character','factor','factor'),
+                                                skip = deviceBatchStartIndex,
+                                                nrows = deviceBatchSize)
   
 
   loginfo('Reading events.csv')
@@ -180,13 +217,13 @@ if (interactive()) {
   rm(trainIntersectionData)
   
   loginfo('Writing trainData.csv')
-  write.csv(trainData, 'output/trainData.csv')
+  write.csv(trainData, paste0('output/trainData', outputFileAppend,'.csv'))
   
   loginfo('Removing some columns from trainData for trainDataNarrow')
   trainDataNarrow = getNarrowDataFrame(trainData)
 
   loginfo('Writing flattened, narrowed data (omitting some columns)')
-  write.csv(trainDataNarrow, 'output/trainDataNarrow.csv')
+  write.csv(trainDataNarrow, paste0('output/trainDataNarrow', outputFileAppend,'.csv'))
   
   ############## set up TEST data
   loginfo('Reading gender_age_test.csv')
@@ -213,14 +250,14 @@ if (interactive()) {
   rm(testIntersectionData)
   
   loginfo('Writing testData.csv')
-  write.csv(testData, 'output/testData.csv')
+  write.csv(testData, paste0('output/testData',outputFileAppend,'.csv'))
   
   loginfo('Removing some columns from testData for testDataNarrow')
   testDataNarrow = getNarrowDataFrame(testData)
 
   loginfo('Writing testDataNarrow.csv')
-  write.csv(testDataNarrow, 'output/testDataNarrow.csv')
+  write.csv(testDataNarrow, paste0('output/testDataNarrow',outputFileAppend,'.csv'))
 
   #plotAgeGroupPopularPhoneBrands(trainDataNarrow)
   #plotAgeGroupPopularDeviceModels(trainDataNarrow)
-}
+#}
