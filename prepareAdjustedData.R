@@ -61,3 +61,29 @@ createAdjustedEventsDataFile = function(){
   loginfo('Writing adjusted-data/events_aggregated_features.csv')
   write.csv(result, 'adjusted-data/events_aggregated_features.csv')
 }
+
+
+getEventDeviceMap = function(forceRecreateEventDeviceEventsFile){
+  eventDeviceMapFilePath = 'adjusted-data/event_device_map.csv'
+  
+  if (!file.exists(eventDeviceMapFilePath) || forceRecreateEventDeviceEventsFile){
+    
+    loginfo('Reading events.csv (this might take a while...)')
+    events_csv = read.csv('data/events.csv', header = TRUE, 
+                          numerals = 'warn.loss',
+                          # use character class for device_id (otherwise we otherwise lose precision),
+                          # "NULL" to omit timestamp, lat, long fields
+                          colClasses = c('integer', 'character',"NULL","NULL","NULL")) 
+    
+    loginfo(paste0('Writing ', eventDeviceMapFilePath))
+    write.csv(events_csv, eventDeviceMapFilePath, row.names = FALSE)
+  }
+  
+  loginfo(paste0('Reading ',eventDeviceMapFilePath))
+  event_device_map_csv = read.csv(eventDeviceMapFilePath, header = TRUE, 
+                        numerals = 'warn.loss',
+                        # use character class for device_id (otherwise we otherwise lose precision),
+                        colClasses = c('integer', 'character')) 
+  
+  return(event_device_map_csv)
+}

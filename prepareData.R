@@ -65,23 +65,30 @@ if (deviceBatchSize > 0 && deviceBatchStartIndex >= 0){
 #if (interactive()) {
   # for device batching
   
-  # set this to TRUE if adjusted-data/phone_brand_device_model_unique.csv 
-  # should be recreated
-  recreateAdjustedPhoneBrandFile = FALSE
-  recreateAdjustedEventsFile = FALSE
+  # set these to TRUE if the adjusted data files should be 
+  # recreated (otherwise, they are created if they don't exist)
+  forceRecreateAdjustedPhoneBrandFile = FALSE
+  forceRecreateAdjustedEventsFile = FALSE
+  forceRecreateEventDeviceMapFile = FALSE
   
   
   # this call creates the adjusted-data/phone_brand_device_model_unique.csv 
   # file referenced below
-  if (!file.exists('adjusted-data/phone_brand_device_model_unique.csv') || recreateAdjustedPhoneBrandFile){
+  # TODO: with time, refactor like getEventDeviceMap function
+  if (!file.exists('adjusted-data/phone_brand_device_model_unique.csv') || forceRecreateAdjustedPhoneBrandFile){
     createAdjustedPhoneBrandDataFile()
   }
   
+  
   # this call creates the adjusted-data/phone_brand_device_model_unique.csv 
   # file referenced below
-  if (!file.exists('adjusted-data/events_aggregated_features.csv') || recreateAdjustedEventsFile){
+  # TODO: with time, refactor like getEventDeviceMap function call below
+  if (!file.exists('adjusted-data/events_aggregated_features.csv') || forceRecreateAdjustedEventsFile){
     createAdjustedEventsDataFile()
   }
+  
+  # get the event-device map
+  eventDeviceMap = getEventDeviceMap(forceRecreateEventDeviceMapFile)
   
   loginfo('Reading adjusted-data/phone_brand_device_model_unique.csv')
   # TODO: review character encoding, e.g. values like 'å°ç±³' for phone_brand column
@@ -128,7 +135,7 @@ if (deviceBatchSize > 0 && deviceBatchStartIndex >= 0){
   mergedData[is.na(mergedData$morning),]$morning = 0
   
   # remove these (they are now in mergedData)
-  rm(events_aggregated_features_csv)
+  #rm(events_aggregated_features_csv)
   # remove these (they are now in mergedData)
   rm(phone_brand_device_model_csv_unique)
 
