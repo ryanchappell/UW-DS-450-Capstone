@@ -1,14 +1,14 @@
 
 # category map data
-categories = c("game","is_game",
-               "car","is_car",
+categoryGreps = c("game","is_game",
+               "^car$|car ","is_car",
                "travel","is_travel",
                "property","is_property",
                "industry","is_industry",
                "financ","is_finance")
 
 # create category map
-categorymap = matrix(categories, ncol = 2, byrow = TRUE)
+categoryGrepMap = matrix(categoryGreps, ncol = 2, byrow = TRUE)
 
 # results in a summed categories like:
 # app_id                      is_game is_car  is_travel is_property is_industry is_finance
@@ -30,9 +30,8 @@ getAppCategoryCounts = function(){
   newColumns = sapply(label_categories_csv$category, FUN = function(category){
     
     # initialize new column
-    col = sapply(1:nrow(categorymap), FUN = function(row){
-      
-      found = length(grep(categorymap[row,1], category, ignore.case = TRUE)) > 0
+    col = sapply(1:nrow(categoryGrepMap), FUN = function(row){
+      found = length(grep(categoryGrepMap[row,1], category, ignore.case = TRUE)) > 0
       return(ifelse(found,1,0))
     })
     
@@ -43,7 +42,7 @@ getAppCategoryCounts = function(){
   
   newColumns = as.data.frame.matrix(tPosedColumns)
   
-  names(newColumns) = categorymap[,2]
+  names(newColumns) = categoryGrepMap[,2]
   
   newColumns = cbind(label_id = label_categories_csv$label_id, newColumns)
 
@@ -53,7 +52,7 @@ getAppCategoryCounts = function(){
   
   # get the column indexes for summing,
   # "+ 2" is to skip the label_id and app_id columns
-  catColumnIndexes = (1:nrow(categorymap)) + 2 
+  catColumnIndexes = (1:nrow(categoryGrepMap)) + 2 
   
   appCategoryTotals = aggregate(appCategories[,catColumnIndexes], by = list(app_id = appCategories$app_id), FUN = function(x){
     sum(x)
