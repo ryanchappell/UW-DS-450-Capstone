@@ -11,6 +11,12 @@
 if('lubridate' %in% rownames(installed.packages()) == FALSE) {
   install.packages('lubridate')
 }
+
+if('logging' %in% rownames(installed.packages()) == FALSE) {
+  install.packages('logging')
+}
+
+library(logging)
 library(lubridate)
 
 # TODO: come back to this if you have time (low priority)

@@ -17,6 +17,7 @@ library(logging)
 source('prepareDataUtils.R')
 source('prepareAdjustedData.R')
 source('exploreData.R')
+source('classifyAppCategories.R')
 
 ########## CHANGE THIS for your local machine
 setwd('C:/projects/UW-DS-450-Capstone')
@@ -62,11 +63,7 @@ if (deviceBatchSize > 0 && deviceBatchStartIndex >= 0){
 }
 
 #if (interactive()) {
-
-
-  
   # for device batching
-  
   
   # set this to TRUE if adjusted-data/phone_brand_device_model_unique.csv 
   # should be recreated
@@ -135,6 +132,11 @@ if (deviceBatchSize > 0 && deviceBatchStartIndex >= 0){
   # remove these (they are now in mergedData)
   rm(phone_brand_device_model_csv_unique)
 
+  loginfo('Getting app category counts')
+  appCategoryCounts = getAppCategoryCounts()
+  
+  #head(appCategoryCounts[order(appCategoryCounts$is_game, decreasing = TRUE),])
+  
   if (readAppEvents){
     loginfo('Reading app_events.csv')
     app_events_csv = read.csv('data/app_events.csv', 
@@ -155,7 +157,7 @@ if (deviceBatchSize > 0 && deviceBatchStartIndex >= 0){
                               numerals = 'warn.loss',
                               # use character class as we would otherwise lose precision
                               # (using 'numeric') with the size of app_id values
-                              colClasses = c('character'))
+                              colClasses = c('character', NA))
     
     loginfo('Merging app_labels_csv')
     mergedData = merge(mergedData, app_labels_csv, by = "app_id")#, all.x = TRUE)
@@ -174,7 +176,10 @@ if (deviceBatchSize > 0 && deviceBatchStartIndex >= 0){
                                     numerals = 'warn.loss')
     
     
-    loginfo('Merging app_labels_csv and label_categories_csv')
+    loginfo('Adding binLabelCategories to label_categories_csv')
+    label_categories_csv = cbind(label_categories_csv, binLabelCategories)
+    
+    loginfo('Merging label_categories_csv')
     mergedData = merge(mergedData, label_categories_csv, by = "label_id")#, all.x = TRUE)
     
     # remove these (they are now in mergedData)
