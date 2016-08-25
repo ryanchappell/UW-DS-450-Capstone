@@ -6,7 +6,7 @@ source('classifyAppCategories.R')
 
 # rough amount of lines of app_events.csv
 appEventLinesRemaining = 32000000
-batchSize = 100000
+batchSize = 500000
 eventDeviceMap = getEventDeviceMap(FALSE)
 appCategoryCounts = getAppCategoryCounts()
 
@@ -55,8 +55,8 @@ while(keepReading){
   }
   
     
-  print(paste0('deviceAppEventCategories row count: ', nrow(combinedRows)))
-  print(paste0('max is_installed: ', max(combinedRows$is_installed),' max is_game: ', max(combinedRows$is_game)))
+  loginfo(paste0('deviceAppEventCategories row count: ', nrow(combinedRows)))
+  loginfo(paste0('max is_installed: ', max(combinedRows$is_installed),' max is_game: ', max(combinedRows$is_game)))
   
   currentBatchNumber = currentBatchNumber + 1
   appEventLinesRemaining = appEventLinesRemaining - batchSize
