@@ -27,12 +27,6 @@ basicConfig('INFO')
 addHandler(writeToFile, file = 'UW-DS-450-Capstone.log')
 loginfo('Starting up!')
 
-# these two data files (events, app_events) are large, 
-# providing these limits
-maxEventsToRead = 100000
-maxAppEventsToRead = 100000
-readAppEvents = FALSE
-
 # default batch stuff (defaults to no batch)
 deviceBatchSize = 0
 deviceBatchStartIndex = 0
@@ -97,9 +91,11 @@ if (deviceBatchSize > 0 && deviceBatchStartIndex >= 0){
                                                  numerals = 'warn.loss',
                                                  # use character class as we would otherwise lose precision
                                                  # (using 'numeric') with the size of device_id values
-                                                 colClasses = c('character','factor','factor'),
-                                                skip = deviceBatchStartIndex,
-                                                nrows = deviceBatchSize)
+                                                 colClasses = c('character','factor','factor')
+                                                 #,
+                                                #skip = deviceBatchStartIndex,
+                                                #nrows = deviceBatchSize
+                                                )
   
   loginfo('Reading adjusted-data/events_aggregated_features.csv')
   events_aggregated_features_csv = read.csv('adjusted-data/events_aggregated_features.csv',
