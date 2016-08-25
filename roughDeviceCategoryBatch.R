@@ -40,21 +40,31 @@ while(keepReading){
   mergedEventDeviceCats_batch_1 = merge(mergedEventDeviceCats_batch_1, appCategoryCounts, by = "app_id")
   
   # which columns we are aggregating
-  combinedAggColumns = 4:(ncol(mergedEventDeviceCats_batch_1) - 1)
-  
-  deviceAppEventCategories = aggregate(x = mergedEventDeviceCats_batch_1[,combinedAggColumns], 
-                                     by = list(device_id = mergedEventDeviceCats_batch_1$device_id), 
-                                     FUN = function(x){
-                                       sum(x)
-                                     })
+  aggColumns = 4:ncol(mergedEventDeviceCats_batch_1)
 
-  if (!is.null(combinedRows)){
-    combinedRows = rbind(deviceAppEventCategories, combinedRows)  
-  } else {
-    combinedRows = deviceAppEventCategories
-  }
-  
+  # aggregate the current rows
+  deviceAppEventCategories = aggregate(x = mergedEventDeviceCats_batch_1[,aggColumns], 
+                                       by = list(device_id = mergedEventDeviceCats_batch_1$device_id), 
+                                       FUN = function(x){
+                                         sum(x)
+                                       })
     
+  if (is.null(combinedRows)){
+    combinedRows = deviceAppEventCategories
+  } else {
+    combinedAggColumns = 2:ncol(combinedRows)
+    
+    # combine with the existing aggregated rows
+    combinedRows = rbind(deviceAppEventCategories, combinedRows)  
+    
+    # aggregate combined rows
+    combinedRows = aggregate(x = combinedRows[,combinedAggColumns], 
+                                         by = list(device_id = combinedRows$device_id), 
+                                         FUN = function(x){
+                                           sum(x)
+                                         })
+  }
+
   loginfo(paste0('deviceAppEventCategories row count: ', nrow(combinedRows)))
   loginfo(paste0('max is_installed: ', max(combinedRows$is_installed),' max is_game: ', max(combinedRows$is_game)))
   
