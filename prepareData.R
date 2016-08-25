@@ -115,83 +115,35 @@ if (deviceBatchSize > 0 && deviceBatchStartIndex >= 0){
   loginfo('Merging phone_brand_device_model_csv_unique and events_aggregated_features_csv')
   mergedData = merge(phone_brand_device_model_csv_unique, events_aggregated_features_csv, by = "device_id", all.x = TRUE)
   
-  # TODO: discuss this (there are plenty of devices without events and, by extension, event timestamps),
-  # maybe we use median or mean for values? don't know...
-  # Also, this can be refactored to a loop or sapply for simplicity
-  loginfo('Replacing NA values in mergedData (devices with zero events)')
-  mergedData[is.na(mergedData$dayIsNotWeekend),]$dayIsNotWeekend = 0
-  mergedData[is.na(mergedData$dayIsWeekend),]$dayIsWeekend = 0
-  mergedData[is.na(mergedData$dowSunday),]$dowSunday = 0
-  mergedData[is.na(mergedData$dowMonday),]$dowMonday = 0
-  mergedData[is.na(mergedData$dowTuesday),]$dowTuesday = 0
-  mergedData[is.na(mergedData$dowWednesday),]$dowWednesday = 0
-  mergedData[is.na(mergedData$dowThursday),]$dowThursday = 0
-  mergedData[is.na(mergedData$dowFriday),]$dowFriday = 0
-  mergedData[is.na(mergedData$dowSaturday),]$dowSaturday = 0
-  mergedData[is.na(mergedData$afternoon),]$afternoon = 0
-  mergedData[is.na(mergedData$evening),]$evening = 0
-  mergedData[is.na(mergedData$late),]$late = 0
-  mergedData[is.na(mergedData$lunch),]$lunch = 0
-  mergedData[is.na(mergedData$morning),]$morning = 0
-  
   # remove these (they are now in mergedData)
   #rm(events_aggregated_features_csv)
   # remove these (they are now in mergedData)
   rm(phone_brand_device_model_csv_unique)
 
-  loginfo('Getting app category counts')
-  appCategoryCounts = getAppCategoryCounts()
-  
-  #head(appCategoryCounts[order(appCategoryCounts$is_game, decreasing = TRUE),])
-  
-  if (readAppEvents){
-    loginfo('Reading app_events.csv')
-    app_events_csv = read.csv('data/app_events.csv', 
-                              numerals = 'warn.loss',
-                              nrows = maxAppEventsToRead,
-                              # use character class as we would otherwise lose precision
-                              # (using 'numeric') with the size of app_id values
-                              colClasses = c(NA,'character', 'factor', 'factor'))
-    
-    loginfo('Merging app_events_csv')
-    mergedData = merge(mergedData, app_events_csv, by = "event_id")#, all.x = TRUE)
-    
-    # remove these (they are now in mergedData)
-    rm(app_events_csv)
-    
-    loginfo('Reading app_labels.csv')
-    app_labels_csv = read.csv('data/app_labels.csv',
-                              numerals = 'warn.loss',
-                              # use character class as we would otherwise lose precision
-                              # (using 'numeric') with the size of app_id values
-                              colClasses = c('character', NA))
-    
-    loginfo('Merging app_labels_csv')
-    mergedData = merge(mergedData, app_labels_csv, by = "app_id")#, all.x = TRUE)
-    
-    # remove these (they are now in mergedData)
-    rm(app_labels_csv)
-    
-    # TODO: the consolidateCategories function is not done, 
-    # come back if you have time (low priority)
-    #loginfo('Consolidating categories')
-    #conCategories = consolidateCategories(label_categories_csv$category)
-    
-  
-    loginfo('Reading label_categories.csv')
-    label_categories_csv = read.csv('data/label_categories.csv',
-                                    numerals = 'warn.loss')
-    
-    
-    loginfo('Adding binLabelCategories to label_categories_csv')
-    label_categories_csv = cbind(label_categories_csv, binLabelCategories)
-    
-    loginfo('Merging label_categories_csv')
-    mergedData = merge(mergedData, label_categories_csv, by = "label_id")#, all.x = TRUE)
-    
-    # remove these (they are now in mergedData)
-    rm(label_categories_csv)
+  deviceCatsFilePath = 'adjusted-data/device_app_event_categories.csv'
+  if(!file.exists(deviceCatsFilePath))
+  {
+    loginfo(paste0(deviceCatsFilePath, ' does not exist. ',
+                   'roughDeviceCategoryBatch.R must be run to generate that file'))
+    stop()
   }
+
+  # NOTE: this must match the number of count columns to read from the device category file 
+  deviceCatColumnCount = 8
+  readColClasses = append(c('NULL','character'), rep('integer', deviceCatColumnCount))
+  
+  loginfo(paste0('Reading ', deviceCatsFilePath))
+  deviceAppEventCategories = read.csv(deviceCatsFilePath,
+                                      # skip row column and
+                                      # use character class as we would otherwise lose precision
+                                      # (using 'numeric') with the size of device_id values
+                                      # 'NULL' to ignore first column
+                                      colClasses = readColClasses)  
+
+  mergedData = merge(mergedData, deviceAppEventCategories, by = "device_id", all.x = TRUE)
+  
+  # set NAs to zero for device app event categories (devices with no events)
+  mergedData[is.na(mergedData)] = 0
   
   ############## set up TRAINING data
   loginfo('Reading gender_age_train.csv')
